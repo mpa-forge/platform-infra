@@ -3,22 +3,27 @@
 Infrastructure-as-code repository for the platform blueprint.
 
 ## Structure
-- `modules/`: reusable Terraform modules
-- `environments/`: environment-specific Terraform roots
-- `docs/`: infrastructure-specific documentation
-- `scripts/`: local utility and developer scripts
+- modules/: reusable Terraform modules
+- environments/: environment-specific Terraform roots
+- docs/: infrastructure-specific documentation
+- scripts/: local utility and developer scripts
 
 ## Toolchain
-- Terraform `1.14.5`
-- Version pin source: `.tool-versions` and `versions.tf`
+- GNU Make (or a compatible make implementation)
+- Terraform 1.14.5
+- Version pin source: .tool-versions and ersions.tf
 
 ## Setup
-Run one of the following bootstrap commands from the repository root:
-- PowerShell: `./scripts/bootstrap.ps1`
-- POSIX shell: `./scripts/bootstrap.sh`
+Before running bootstrap:
+- Required: GNU Make (or a compatible make implementation)
+- Recommended: mise or sdf for automatic tool installation from .tool-versions
+- Fallback: manually install the pinned tool versions listed above
+
+Run the bootstrap command from the repository root:
+- Make: make bootstrap
 
 Bootstrap validates the pinned Terraform CLI version.
-If `mise` or `asdf` is available, the script will use it to install the pinned toolchain automatically.
+If mise or sdf is available, the script will use it to install the pinned toolchain automatically.
 
 ## Run
 No Terraform roots are implemented yet.
