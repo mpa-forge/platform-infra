@@ -8,9 +8,17 @@ Infrastructure-as-code repository for the platform blueprint.
 - `docs/`: infrastructure-specific documentation
 - `scripts/`: local utility and developer scripts
 
+## Toolchain
+- Terraform `1.14.5`
+- Version pin source: `.tool-versions` and `versions.tf`
+
 ## Setup
-This repository is currently at the skeleton stage.
-Terraform version pinning, bootstrap commands, and backend configuration will be added in later tasks.
+Run one of the following bootstrap commands from the repository root:
+- PowerShell: `./scripts/bootstrap.ps1`
+- POSIX shell: `./scripts/bootstrap.sh`
+
+Bootstrap validates the pinned Terraform CLI version.
+If `mise` or `asdf` is available, the script will use it to install the pinned toolchain automatically.
 
 ## Run
 No Terraform roots are implemented yet.
