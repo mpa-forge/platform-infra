@@ -6,7 +6,7 @@ LOCAL_COMPOSE_PROJECT := platform-blueprint-local
 DOCKER_COMPOSE := docker compose -p $(LOCAL_COMPOSE_PROJECT) -f $(LOCAL_COMPOSE_FILE)
 DOCKER_COMPOSE_ALL_PROFILES := $(DOCKER_COMPOSE) --profile frontend-support --profile api-support
 
-.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs
+.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test
 
 help:
 	@echo "Targets:"
@@ -28,6 +28,7 @@ help:
 	@echo "  local-frontend-support-logs Stream postgres + backend-api logs"
 	@echo "  local-api-support-logs      Stream postgres + frontend-web logs"
 	@echo "  local-full-logs            Stream frontend-web + backend-api + postgres logs"
+	@echo "  local-smoke-test          Start the full local stack, verify health, and stop it"
 
 bootstrap: install-tools check-tools install-dev-tools
 	@echo "Bootstrap completed."
@@ -104,3 +105,6 @@ local-api-support-logs:
 
 local-full-logs:
 	$(DOCKER_COMPOSE_ALL_PROFILES) logs -f postgres frontend-web backend-api
+
+local-smoke-test:
+	powershell -ExecutionPolicy Bypass -File scripts/local-smoke-test.ps1

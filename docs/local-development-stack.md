@@ -25,6 +25,7 @@ From `platform-infra`:
 - `make local-frontend-support-up`
 - `make local-api-support-up`
 - `make local-full-up`
+- `make local-smoke-test`
 - `make local-down`
 - `make local-ps`
 - `make local-frontend-support-logs`
@@ -45,9 +46,25 @@ If you want all three services containerized at once:
 
 - `make local-full-up`
 - `make local-full-logs`
+- `make local-smoke-test`
 - `make local-down`
 
 This mode is useful for validating the combined baseline without running either app natively on the host.
+
+## Smoke testing
+
+The centralized smoke scripts live in `scripts/`:
+
+- `scripts/local-smoke-test.ps1`
+- `scripts/local-smoke-test.sh`
+
+They:
+
+- bring up the full local stack
+- wait for Postgres to become healthy
+- verify `http://localhost:3000/healthz`
+- verify `http://localhost:8080/healthz`
+- tear the stack down unless explicitly told to keep it running
 
 ## Data
 
