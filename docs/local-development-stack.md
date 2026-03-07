@@ -24,10 +24,12 @@ From `platform-infra`:
 
 - `make local-frontend-support-up`
 - `make local-api-support-up`
+- `make local-full-up`
 - `make local-down`
 - `make local-ps`
 - `make local-frontend-support-logs`
 - `make local-api-support-logs`
+- `make local-full-logs`
 
 Application repos call these targets through thin repo-local wrappers so the compose definition stays centralized.
 
@@ -36,6 +38,16 @@ Application repos call these targets through thin repo-local wrappers so the com
 - `frontend-web` container: `http://localhost:3000`
 - `backend-api` container: `http://localhost:8080`
 - `postgres`: `localhost:5432`
+
+## Full stack mode
+
+If you want all three services containerized at once:
+
+- `make local-full-up`
+- `make local-full-logs`
+- `make local-down`
+
+This mode is useful for validating the combined baseline without running either app natively on the host.
 
 ## Data
 
