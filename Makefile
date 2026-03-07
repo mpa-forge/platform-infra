@@ -6,7 +6,7 @@ LOCAL_COMPOSE_PROJECT := platform-blueprint-local
 DOCKER_COMPOSE := docker compose -p $(LOCAL_COMPOSE_PROJECT) -f $(LOCAL_COMPOSE_FILE)
 DOCKER_COMPOSE_ALL_PROFILES := $(DOCKER_COMPOSE) --profile frontend-support --profile api-support
 
-.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-down local-ps local-frontend-support-logs local-api-support-logs
+.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs
 
 help:
 	@echo "Targets:"
@@ -22,10 +22,12 @@ help:
 	@echo "  format-check      Check repo formatting without writing changes"
 	@echo "  local-frontend-support-up Start postgres + backend-api for native frontend work"
 	@echo "  local-api-support-up      Start postgres + frontend-web for native API work"
+	@echo "  local-full-up             Start frontend-web + backend-api + postgres"
 	@echo "  local-down                Stop the local development stack"
 	@echo "  local-ps                  Show local development stack status"
 	@echo "  local-frontend-support-logs Stream postgres + backend-api logs"
 	@echo "  local-api-support-logs      Stream postgres + frontend-web logs"
+	@echo "  local-full-logs            Stream frontend-web + backend-api + postgres logs"
 
 bootstrap: install-tools check-tools install-dev-tools
 	@echo "Bootstrap completed."
@@ -85,6 +87,9 @@ local-frontend-support-up:
 local-api-support-up:
 	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --remove-orphans postgres frontend-web
 
+local-full-up:
+	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --build --remove-orphans postgres frontend-web backend-api
+
 local-down:
 	$(DOCKER_COMPOSE_ALL_PROFILES) down --remove-orphans
 
@@ -96,3 +101,6 @@ local-frontend-support-logs:
 
 local-api-support-logs:
 	$(DOCKER_COMPOSE_ALL_PROFILES) logs -f postgres frontend-web
+
+local-full-logs:
+	$(DOCKER_COMPOSE_ALL_PROFILES) logs -f postgres frontend-web backend-api

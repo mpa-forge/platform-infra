@@ -39,6 +39,7 @@ The repo does own the centralized Phase 1 local development stack:
 
 - `make local-frontend-support-up` starts `postgres` + `backend-api`
 - `make local-api-support-up` starts `postgres` + `frontend-web`
+- `make local-full-up` starts `frontend-web` + `backend-api` + `postgres`
 - `make local-down` stops the stack
 
 See `docs/local-development-stack.md` for the local development model and port map.
