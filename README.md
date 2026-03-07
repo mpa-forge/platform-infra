@@ -41,6 +41,7 @@ The repo does own the centralized Phase 1 local development stack:
 - `make local-api-support-up` starts `postgres` + `frontend-web`
 - `make local-full-up` starts `frontend-web` + `backend-api` + `postgres`
 - `make local-smoke-test` starts the full stack, verifies health, and stops it
+- `make local-db-reset` recreates the Postgres volume and reapplies the local seed baseline
 - `make local-down` stops the stack
 
 See `docs/local-development-stack.md` for the local development model and port map.

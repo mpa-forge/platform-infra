@@ -69,8 +69,15 @@ They:
 ## Data
 
 - Postgres uses the named Docker volume `postgres-data`.
-- Phase 1 only provisions an empty database instance.
-- Schema/bootstrap seed content is introduced later in `P1-T09`.
+- Postgres loads initialization SQL from `local/postgres-init/`.
+- Phase 1 baseline schema:
+  - table: `bootstrap_records`
+- Phase 1 baseline seed rows:
+  - `stack_version=phase-1`
+  - `seed_source=platform-infra/local/postgres-init`
+- To recreate the baseline from scratch:
+  - `make local-db-reset`
+- Init scripts only run on a fresh Postgres volume, which is why the reset target removes the named volume first.
 
 ## Runtime assumptions
 
