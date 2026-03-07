@@ -6,7 +6,7 @@ LOCAL_COMPOSE_PROJECT := platform-blueprint-local
 DOCKER_COMPOSE := docker compose -p $(LOCAL_COMPOSE_PROJECT) -f $(LOCAL_COMPOSE_FILE)
 DOCKER_COMPOSE_ALL_PROFILES := $(DOCKER_COMPOSE) --profile frontend-support --profile api-support
 
-.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test
+.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
 
 help:
 	@echo "Targets:"
@@ -29,6 +29,7 @@ help:
 	@echo "  local-api-support-logs      Stream postgres + frontend-web logs"
 	@echo "  local-full-logs            Stream frontend-web + backend-api + postgres logs"
 	@echo "  local-smoke-test          Start the full local stack, verify health, and stop it"
+	@echo "  local-db-reset            Recreate the local Postgres volume and seed baseline data"
 
 bootstrap: install-tools check-tools install-dev-tools
 	@echo "Bootstrap completed."
@@ -108,3 +109,7 @@ local-full-logs:
 
 local-smoke-test:
 	powershell -ExecutionPolicy Bypass -File scripts/local-smoke-test.ps1
+
+local-db-reset:
+	$(DOCKER_COMPOSE_ALL_PROFILES) down --remove-orphans --volumes
+	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --build --wait --remove-orphans postgres
