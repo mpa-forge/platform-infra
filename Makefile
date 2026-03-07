@@ -1,8 +1,12 @@
 SHELL := bash
 
 TERRAFORM_VERSION := 1.14.5
+LOCAL_COMPOSE_FILE := local/compose.yml
+LOCAL_COMPOSE_PROJECT := platform-blueprint-local
+DOCKER_COMPOSE := docker compose -p $(LOCAL_COMPOSE_PROJECT) -f $(LOCAL_COMPOSE_FILE)
+DOCKER_COMPOSE_ALL_PROFILES := $(DOCKER_COMPOSE) --profile frontend-support --profile api-support
 
-.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check
+.PHONY: help bootstrap install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-down local-ps local-frontend-support-logs local-api-support-logs
 
 help:
 	@echo "Targets:"
@@ -16,6 +20,12 @@ help:
 	@echo "  lint              Run repo lint checks"
 	@echo "  format            Apply repo formatting"
 	@echo "  format-check      Check repo formatting without writing changes"
+	@echo "  local-frontend-support-up Start postgres + backend-api for native frontend work"
+	@echo "  local-api-support-up      Start postgres + frontend-web for native API work"
+	@echo "  local-down                Stop the local development stack"
+	@echo "  local-ps                  Show local development stack status"
+	@echo "  local-frontend-support-logs Stream postgres + backend-api logs"
+	@echo "  local-api-support-logs      Stream postgres + frontend-web logs"
 
 bootstrap: install-tools check-tools install-dev-tools
 	@echo "Bootstrap completed."
@@ -68,3 +78,21 @@ repo-format:
 
 repo-format-check:
 	@echo "No Terraform format check is configured in the Phase 1 baseline."
+
+local-frontend-support-up:
+	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --remove-orphans postgres backend-api
+
+local-api-support-up:
+	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --remove-orphans postgres frontend-web
+
+local-down:
+	$(DOCKER_COMPOSE_ALL_PROFILES) down --remove-orphans
+
+local-ps:
+	$(DOCKER_COMPOSE_ALL_PROFILES) ps
+
+local-frontend-support-logs:
+	$(DOCKER_COMPOSE_ALL_PROFILES) logs -f postgres backend-api
+
+local-api-support-logs:
+	$(DOCKER_COMPOSE_ALL_PROFILES) logs -f postgres frontend-web

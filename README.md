@@ -35,6 +35,14 @@ If `mise` or `asdf` is available, the script will use it to install the pinned t
 No Terraform roots are implemented yet.
 Infrastructure planning and apply workflows will be added in Phase 5.
 
+The repo does own the centralized Phase 1 local development stack:
+
+- `make local-frontend-support-up` starts `postgres` + `backend-api`
+- `make local-api-support-up` starts `postgres` + `frontend-web`
+- `make local-down` stops the stack
+
+See `docs/local-development-stack.md` for the local development model and port map.
+
 ## Test
 No automated validation commands are configured yet.
 Formatting, validation, and policy checks will be introduced incrementally in later tasks.
