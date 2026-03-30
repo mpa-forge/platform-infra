@@ -24,6 +24,8 @@ From `platform-infra`:
 
 - `make local-frontend-support-up`
 - `make local-api-support-up`
+- `make local-frontend-support-up BUILD=1`
+- `make local-api-support-up BUILD=1`
 - `make local-full-up`
 - `make local-smoke-test`
 - `make local-down`
@@ -33,6 +35,8 @@ From `platform-infra`:
 - `make local-full-logs`
 
 Application repos call these targets through thin repo-local wrappers so the compose definition stays centralized.
+Passing `BUILD=1` through those wrappers forces Docker Compose to rebuild the
+support-service image before startup.
 
 ## Ports
 
@@ -81,6 +85,8 @@ They:
 
 ## Runtime assumptions
 
+- The containerized `backend-api` loads its repo-local env contract from
+  `../../backend-api/.env` through the centralized compose definition.
 - The containerized frontend is built with `VITE_API_BASE_URL=http://localhost:8080` so the browser running on the host can talk to a native or containerized API on the host port.
 - The containerized API uses `postgres` as the database host inside the compose network.
 - Native service reload is manual: rerun the repo-local `make run` command after code changes.

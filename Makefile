@@ -3,8 +3,10 @@ SHELL := bash
 TERRAFORM_VERSION := 1.14.5
 LOCAL_COMPOSE_FILE := local/compose.yml
 LOCAL_COMPOSE_PROJECT := platform-blueprint-local
+BUILD ?=
 DOCKER_COMPOSE := docker compose -p $(LOCAL_COMPOSE_PROJECT) -f $(LOCAL_COMPOSE_FILE)
 DOCKER_COMPOSE_ALL_PROFILES := $(DOCKER_COMPOSE) --profile frontend-support --profile api-support
+DOCKER_BUILD_FLAG := $(if $(filter 1 true TRUE yes YES on ON,$(BUILD)),--build,)
 
 .PHONY: help bootstrap doctor install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
 
@@ -21,8 +23,8 @@ help:
 	@echo "  lint              Run repo lint checks"
 	@echo "  format            Apply repo formatting"
 	@echo "  format-check      Check repo formatting without writing changes"
-	@echo "  local-frontend-support-up Start postgres + backend-api for native frontend work"
-	@echo "  local-api-support-up      Start postgres + frontend-web for native API work"
+	@echo "  local-frontend-support-up Start postgres + backend-api for native frontend work (optional: BUILD=1)"
+	@echo "  local-api-support-up      Start postgres + frontend-web for native API work (optional: BUILD=1)"
 	@echo "  local-full-up             Start frontend-web + backend-api + postgres"
 	@echo "  local-down                Stop the local development stack"
 	@echo "  local-ps                  Show local development stack status"
@@ -94,10 +96,10 @@ repo-format-check:
 	@echo "No Terraform format check is configured in the Phase 1 baseline."
 
 local-frontend-support-up:
-	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --remove-orphans postgres backend-api
+	$(DOCKER_COMPOSE_ALL_PROFILES) up -d $(DOCKER_BUILD_FLAG) --remove-orphans postgres backend-api
 
 local-api-support-up:
-	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --remove-orphans postgres frontend-web
+	$(DOCKER_COMPOSE_ALL_PROFILES) up -d $(DOCKER_BUILD_FLAG) --remove-orphans postgres frontend-web
 
 local-full-up:
 	$(DOCKER_COMPOSE_ALL_PROFILES) up -d --build --remove-orphans postgres frontend-web backend-api
