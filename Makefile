@@ -8,11 +8,13 @@ DOCKER_COMPOSE := docker compose -p $(LOCAL_COMPOSE_PROJECT) -f $(LOCAL_COMPOSE_
 DOCKER_COMPOSE_ALL_PROFILES := $(DOCKER_COMPOSE) --profile frontend-support --profile api-support
 DOCKER_BUILD_FLAG := $(if $(filter 1 true TRUE yes YES on ON,$(BUILD)),--build,)
 
-.PHONY: help bootstrap doctor install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
+.PHONY: help bootstrap doctor sync-agent-skills sync-agent-skills-check install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
 
 help:
 	@echo "Targets:"
 	@echo "  bootstrap         Install toolchain when possible and run baseline setup"
+	@echo "  sync-agent-skills Refresh managed common skills from sibling platform-blueprint-specs"
+	@echo "  sync-agent-skills-check Fail if managed common skills drift from sibling platform-blueprint-specs"
 	@echo "  doctor            Run shared workstation checks from sibling platform-blueprint-specs"
 	@echo "  install-tools     Install pinned tools with mise/asdf if available"
 	@echo "  check-tools       Validate pinned tool versions"
@@ -37,7 +39,25 @@ help:
 bootstrap: install-tools check-tools install-dev-tools
 	@echo "Bootstrap completed."
 
-doctor:
+sync-agent-skills:
+	@if [[ -f ../platform-blueprint-specs/scripts/sync-common-skills.sh ]]; then \
+		bash ../platform-blueprint-specs/scripts/sync-common-skills.sh --repo-root "$$(pwd)"; \
+	else \
+		echo "Shared skill sync script not found at ../platform-blueprint-specs/scripts/sync-common-skills.sh" >&2; \
+		echo "Keep platform-blueprint-specs as a sibling checkout to use make sync-agent-skills in this workspace." >&2; \
+		exit 1; \
+	fi
+
+sync-agent-skills-check:
+	@if [[ -f ../platform-blueprint-specs/scripts/sync-common-skills.sh ]]; then \
+		bash ../platform-blueprint-specs/scripts/sync-common-skills.sh --check --repo-root "$$(pwd)"; \
+	else \
+		echo "Shared skill sync script not found at ../platform-blueprint-specs/scripts/sync-common-skills.sh" >&2; \
+		echo "Keep platform-blueprint-specs as a sibling checkout to use make sync-agent-skills-check in this workspace." >&2; \
+		exit 1; \
+	fi
+
+doctor: sync-agent-skills
 	@if [[ -f ../platform-blueprint-specs/scripts/windows-tooling-doctor.ps1 ]]; then \
 		powershell -ExecutionPolicy Bypass -File ../platform-blueprint-specs/scripts/windows-tooling-doctor.ps1; \
 	else \
@@ -75,7 +95,7 @@ install-dev-tools:
 	python -m pip install --user -r requirements-dev.txt
 
 precommit-install: install-dev-tools
-	python -m pre_commit install
+	python -m pre_commit install --hook-type pre-commit --hook-type pre-push
 
 precommit-run:
 	python -m pre_commit run --all-files --show-diff-on-failure
