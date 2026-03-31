@@ -13,9 +13,8 @@ Before making changes:
 3. Read `docs/local-development-stack.md` when the task affects local stack orchestration.
 4. Run `make sync-agent-skills` before starting major changes or when shared skill guidance may have changed.
 5. Read `../platform-blueprint-specs/common/AGENTS.md`.
-6. Read `.codex/skills/automated-ai-worker/SKILL.md` when the repo is being changed by an automated AI worker or when following the same autonomous workflow manually.
-7. Read `../platform-blueprint-specs/implementation/phases/phase-1-repository-and-local-development-baseline.md`.
-8. Read `../platform-blueprint-specs/ops/ephemeral-gke-cluster-lifecycle-requirements.md`.
+6. Read `../platform-blueprint-specs/implementation/phases/phase-1-repository-and-local-development-baseline.md`.
+7. Read `../platform-blueprint-specs/ops/ephemeral-gke-cluster-lifecycle-requirements.md`.
 
 ## Repo Role
 
@@ -38,11 +37,6 @@ Before making changes:
 
 - `make lint`
 - repo-local compose or smoke commands when stack behavior changes
-
-## Shared Managed Skills
-
-Run `make sync-agent-skills` before major changes so the local common skill
-copies stay current.
 
 ## Priority of Instructions
 
