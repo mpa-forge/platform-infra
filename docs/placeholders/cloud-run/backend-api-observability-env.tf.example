@@ -1,0 +1,32 @@
+# Placeholder snippet for the future Phase 5 Cloud Run Terraform root/module.
+# Do not apply from this repo yet.
+
+env {
+  name  = "OTEL_MODE"
+  value = "direct_otlp"
+}
+
+env {
+  name  = "OBS_TELEMETRY_PROFILE"
+  value = "balanced"
+}
+
+env {
+  name  = "OTEL_EXPORTER_OTLP_ENDPOINT"
+  value = "https://otlp-gateway-prod-us-east-3.grafana.net/otlp"
+}
+
+env {
+  name  = "GRAFANA_CLOUD_INSTANCE_ID"
+  value = "1546554"
+}
+
+env {
+  name = "GRAFANA_OTLP_INGEST_TOKEN"
+  value_source {
+    secret_key_ref {
+      secret  = "grafana-otlp-ingest-token-rc"
+      version = "latest"
+    }
+  }
+}
