@@ -1,0 +1,23 @@
+# Placeholder workload env fragment for the future GKE `collector_gateway`
+# path. Move these entries into the eventual Helm values or workload manifests
+# once Phase 5/6 adds deployable GKE roots/modules.
+- name: OTEL_MODE
+  value: collector_gateway
+
+- name: OBS_TELEMETRY_PROFILE
+  value: balanced
+
+- name: OTEL_EXPORTER_OTLP_ENDPOINT
+  value: http://platform-observability-collector.platform-blueprint.svc.cluster.local:4318
+
+- name: GRAFANA_CLOUD_INSTANCE_ID
+  value: "1546554"
+
+- name: TRACE_SAMPLE_PERCENT
+  value: "25"
+
+- name: GRAFANA_OTLP_INGEST_TOKEN
+  valueFrom:
+    secretKeyRef:
+      name: backend-api-grafana-otlp
+      key: GRAFANA_OTLP_INGEST_TOKEN
