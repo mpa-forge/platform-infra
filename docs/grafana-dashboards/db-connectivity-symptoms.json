@@ -1,0 +1,232 @@
+{
+  "__inputs": [
+    {
+      "name": "DS_GRAFANACLOUD_METRICS",
+      "label": "Grafana Cloud Metrics",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "prometheus",
+      "pluginName": "Prometheus"
+    },
+    {
+      "name": "DS_GRAFANACLOUD_LOGS",
+      "label": "Grafana Cloud Logs",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "loki",
+      "pluginName": "Loki"
+    }
+  ],
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "${DS_GRAFANACLOUD_METRICS}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, http_route) (rate(http_server_request_duration_seconds_bucket{deployment_environment=~\"$environment\",service_name=~\"$service\",http_route=~\"/blueprint\\\\.user\\\\.v1\\\\.UserService/.+\"}[5m])))",
+          "legendFormat": "{{http_route}}",
+          "refId": "A"
+        }
+      ],
+      "title": "P95 Latency for DB-Backed Procedures",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_GRAFANACLOUD_METRICS}",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": {
+          "mode": "multi"
+        }
+      },
+      "targets": [
+        {
+          "expr": "sum by (http_route, http_response_status_class) (rate(http_server_request_count_total{deployment_environment=~\"$environment\",service_name=~\"$service\",http_route=~\"/blueprint\\\\.user\\\\.v1\\\\.UserService/.+\",http_response_status_class=~\"4xx|5xx\"}[5m]))",
+          "legendFormat": "{{http_route}} {{http_response_status_class}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Failure Rate for DB-Backed Procedures",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "${DS_GRAFANACLOUD_LOGS}",
+      "gridPos": {
+        "h": 10,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "expr": "{deployment_environment=~\"$environment\",service_name=~\"$service\"} |= \"postgres\" or {deployment_environment=~\"$environment\",service_name=~\"$service\"} |= \"database\"",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Postgres and Database Symptom Logs",
+      "type": "logs"
+    },
+    {
+      "datasource": "${DS_GRAFANACLOUD_METRICS}",
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 18
+      },
+      "id": 4,
+      "mode": "markdown",
+      "options": {
+        "content": "This is intentionally a symptom dashboard, not a full DB internals dashboard. Phase 3 does not yet expose dedicated pool or postgres exporter metrics in the planning baseline, so the dashboard focuses on latency and failures for routes that rely on Postgres plus postgres-related logs. A later phase can deepen this with explicit pool saturation, connect errors, and database exporter signals.",
+        "mode": "markdown"
+      },
+      "title": "Scope Notes",
+      "type": "text"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 41,
+  "tags": [
+    "phase-3",
+    "p3-t06",
+    "grafana-cloud",
+    "database"
+  ],
+  "templating": {
+    "list": [
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "${DS_GRAFANACLOUD_METRICS}",
+        "definition": "label_values(http_server_request_count_total, deployment_environment)",
+        "includeAll": true,
+        "label": "Environment",
+        "multi": true,
+        "name": "environment",
+        "options": [],
+        "query": {
+          "query": "label_values(http_server_request_count_total, deployment_environment)",
+          "refId": "PrometheusVariableQueryEditor-Environment"
+        },
+        "refresh": 1,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "allValue": ".*",
+        "current": {
+          "selected": true,
+          "text": "backend-api",
+          "value": [
+            "backend-api"
+          ]
+        },
+        "datasource": "${DS_GRAFANACLOUD_METRICS}",
+        "definition": "label_values(http_server_request_count_total{deployment_environment=~\"$environment\"}, service_name)",
+        "includeAll": true,
+        "label": "Service",
+        "multi": true,
+        "name": "service",
+        "options": [],
+        "query": {
+          "query": "label_values(http_server_request_count_total{deployment_environment=~\"$environment\"}, service_name)",
+          "refId": "PrometheusVariableQueryEditor-Service"
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "timezone": "browser",
+  "title": "DB Connectivity Symptoms",
+  "uid": "bp-db-connectivity-symptoms",
+  "version": 1,
+  "weekStart": ""
+}
