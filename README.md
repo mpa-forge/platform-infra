@@ -61,6 +61,11 @@ The repo does own the centralized Phase 1 local development stack:
 See `docs/local-development-stack.md` for the local development model and port map.
 See `docs/observability-secret-delivery.md` for the Grafana OTLP secret
 delivery contract that later Terraform and GKE modules will adopt.
+The GKE placeholder set now includes:
+
+- `docs/placeholders/gke/backend-api-otlp-external-secret.yaml`
+- `docs/placeholders/gke/backend-api-observability-env.yaml`
+- `docs/placeholders/gke/backend-api-collector-gateway.yaml`
 
 ## Test
 
