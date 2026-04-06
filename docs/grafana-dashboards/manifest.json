@@ -1,0 +1,60 @@
+{
+  "generated_for_task": "P3-T06",
+  "phase": "Phase 3 bootstrap asset set",
+  "grafana_folder": "Platform / RC",
+  "canonical_format": "Grafana dashboard JSON",
+  "datasource_inputs": [
+    {
+      "name": "DS_GRAFANACLOUD_METRICS",
+      "plugin_id": "prometheus",
+      "purpose": "Grafana Cloud Metrics panels"
+    },
+    {
+      "name": "DS_GRAFANACLOUD_LOGS",
+      "plugin_id": "loki",
+      "purpose": "Grafana Cloud Logs symptom panels"
+    }
+  ],
+  "query_assumptions": {
+    "metrics_names": [
+      "http_server_request_count_total",
+      "http_server_request_duration_seconds_bucket"
+    ],
+    "resource_labels": [
+      "service_name",
+      "deployment_environment",
+      "platform_observability_runtime_mode",
+      "platform_observability_telemetry_profile"
+    ],
+    "request_labels": [
+      "http_route",
+      "http_request_method",
+      "http_response_status_class",
+      "http_response_status_code"
+    ],
+    "notes": [
+      "The metric and label names assume Grafana Cloud Prometheus-compatible translation of the OTEL signals emitted by platform-observability and backend-api.",
+      "The DB dashboard is symptom-oriented until explicit DB pool metrics are added in a later phase."
+    ]
+  },
+  "dashboards": [
+    {
+      "file": "docs/grafana-dashboards/api-golden-signals.json",
+      "title": "API Golden Signals",
+      "folder": "Platform / RC",
+      "scope": "API request traffic, error ratio, latency, and top routes"
+    },
+    {
+      "file": "docs/grafana-dashboards/runtime-path-status.json",
+      "title": "Runtime Path Status",
+      "folder": "Platform / RC",
+      "scope": "Runtime mode and telemetry profile visibility across direct OTLP and collector-gateway paths"
+    },
+    {
+      "file": "docs/grafana-dashboards/db-connectivity-symptoms.json",
+      "title": "DB Connectivity Symptoms",
+      "folder": "Platform / RC",
+      "scope": "DB-backed route latency, request failures, and postgres-related logs"
+    }
+  ]
+}
