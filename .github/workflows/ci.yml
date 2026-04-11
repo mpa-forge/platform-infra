@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   ci:
-    uses: mpa-forge/.github/.github/workflows/reusable-ci-infra.yml@main
+    uses: mpa-forge/.github/.github/workflows/reusable-ci-infra.yml@codex/p4-t01-workflow-rollout
     with:
       working-directory: "."
       terraform-version: "1.14.5"
