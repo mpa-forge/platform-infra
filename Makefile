@@ -8,7 +8,18 @@ DOCKER_COMPOSE := docker compose -p $(LOCAL_COMPOSE_PROJECT) -f $(LOCAL_COMPOSE_
 DOCKER_COMPOSE_ALL_PROFILES := $(DOCKER_COMPOSE) --profile frontend-support --profile api-support
 DOCKER_BUILD_FLAG := $(if $(filter 1 true TRUE yes YES on ON,$(BUILD)),--build,)
 
-.PHONY: help bootstrap doctor sync-agent-skills sync-agent-skills-check install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
+TERRAFORM_VALIDATE_DIRS := \
+	environments/rc \
+	environments/prod \
+	modules/network \
+	modules/cloudrun_api \
+	modules/gke \
+	modules/gar \
+	modules/cloudsql \
+	modules/secrets \
+	modules/observability_support
+
+.PHONY: help bootstrap doctor sync-agent-skills sync-agent-skills-check install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check terraform-init terraform-validate terraform-plan local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
 
 help:
 	@echo "Targets:"
@@ -25,6 +36,9 @@ help:
 	@echo "  lint              Run repo lint checks"
 	@echo "  format            Apply repo formatting"
 	@echo "  format-check      Check repo formatting without writing changes"
+	@echo "  terraform-init    Run terraform init -backend=false for env roots and shared modules"
+	@echo "  terraform-validate Run terraform validate for env roots and shared modules"
+	@echo "  terraform-plan ENV=<rc|prod> Run terraform plan for a single environment root"
 	@echo "  local-frontend-support-up Start postgres + backend-api for native frontend work (optional: BUILD=1)"
 	@echo "  local-api-support-up      Start postgres + frontend-web for native API work (optional: BUILD=1)"
 	@echo "  local-full-up             Start frontend-web + backend-api + postgres"
@@ -114,6 +128,28 @@ repo-format:
 
 repo-format-check:
 	@echo "No Terraform format check is configured in the Phase 1 baseline."
+
+terraform-init:
+	@for dir in $(TERRAFORM_VALIDATE_DIRS); do \
+		echo "Initializing $$dir"; \
+		terraform -chdir=$$dir init -backend=false -input=false >/dev/null; \
+	done
+
+terraform-validate: terraform-init
+	@for dir in $(TERRAFORM_VALIDATE_DIRS); do \
+		echo "Validating $$dir"; \
+		terraform -chdir=$$dir validate; \
+	done
+
+terraform-plan:
+	@if [[ -z "$(ENV)" ]]; then \
+		echo "ENV is required. Use ENV=rc or ENV=prod." >&2; \
+		exit 1; \
+	fi
+	@default_google_credentials='{"type":"authorized_user","client_id":"placeholder","client_secret":"placeholder","refresh_token":"placeholder"}'; \
+	google_credentials="$${GOOGLE_CREDENTIALS:-$$default_google_credentials}"; \
+	GOOGLE_CREDENTIALS="$$google_credentials" terraform -chdir=environments/$(ENV) init -backend=false -input=false; \
+	GOOGLE_CREDENTIALS="$$google_credentials" terraform -chdir=environments/$(ENV) plan -input=false
 
 local-frontend-support-up:
 	$(DOCKER_COMPOSE_ALL_PROFILES) up -d $(DOCKER_BUILD_FLAG) --remove-orphans postgres backend-api

@@ -39,13 +39,46 @@ If `mise` or `asdf` is available, the script will use it to install the pinned t
 - Run repo lint checks: `make lint`
 - Formatting is deferred for the infra repo in the Phase 1 baseline
 
-## Run
+## Terraform Layout
 
-No Terraform roots are implemented yet.
-Infrastructure planning and apply workflows will be added in Phase 5.
-Observability secret-delivery expectations are documented now in
-`docs/observability-secret-delivery.md`, including Cloud Run and GKE placeholder
-artifacts for later phases.
+Phase 5 now provides the initial Terraform repository skeleton:
+
+- `environments/rc/`: explicit RC root with its own project boundary inputs
+- `environments/prod/`: explicit prod root with its own project boundary inputs
+- `modules/network/`: VPC, subnet, and private service access baseline
+- `modules/cloudrun_api/`: Cloud Run API runtime baseline including the
+  Phase 3 observability secret contract
+- `modules/gar/`: Artifact Registry repositories and IAM binding scaffolding
+- `modules/cloudsql/`: Cloud SQL PostgreSQL baseline
+- `modules/secrets/`: Secret Manager placeholders and IAM binding scaffolding
+- `modules/gke/`: optional GKE Autopilot skeleton, disabled by default
+- `modules/observability_support/`: shared observability naming and env-contract
+  outputs for Cloud Run and the optional GKE path
+
+The repository keeps one Terraform root per environment and does not use
+Terraform workspaces for environment switching.
+
+Default `terraform.tfvars` files keep resource creation disabled until backend,
+IAM, and rollout sequencing are ready. This still lets us validate module/root
+contracts and plan each environment from its dedicated root.
+
+Repo-local Terraform entrypoints:
+
+- `make terraform-validate`
+- `make terraform-plan ENV=rc`
+- `make terraform-plan ENV=prod`
+
+The plan target injects a placeholder Google credentials document only when
+`GOOGLE_CREDENTIALS` is not already set, so skeleton plans can run before ADC is
+configured. Real plan/apply workflows should provide actual Google credentials.
+
+Observability secret-delivery expectations remain documented in
+`docs/observability-secret-delivery.md`, and the Cloud Run module now turns that
+contract into the baseline Terraform wiring shape for later rollout tasks.
+See `docs/terraform-file-guide.md` for a file-by-file explanation of the
+Terraform layout.
+
+## Run
 
 The repo does own the centralized Phase 1 local development stack:
 
