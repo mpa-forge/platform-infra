@@ -67,16 +67,21 @@ Repo-local Terraform entrypoints:
 - `make terraform-validate`
 - `make terraform-plan ENV=rc`
 - `make terraform-plan ENV=prod`
+- `make terraform-apply ENV=rc`
+- `make terraform-apply ENV=prod`
 
-The plan target injects a placeholder Google credentials document only when
-`GOOGLE_CREDENTIALS` is not already set, so skeleton plans can run before ADC is
-configured. Real plan/apply workflows should provide actual Google credentials.
+The environment roots use remote state in GCS. Real plan/apply workflows should
+authenticate with ADC or a CI service account that has access to the matching
+environment state bucket. For local runs, the Make targets can also use an
+access token from the active `gcloud` account when ADC is not configured.
 
 Observability secret-delivery expectations remain documented in
 `docs/observability-secret-delivery.md`, and the Cloud Run module now turns that
 contract into the baseline Terraform wiring shape for later rollout tasks.
 See `docs/terraform-file-guide.md` for a file-by-file explanation of the
 Terraform layout.
+See `docs/terraform-remote-state.md` for the state project, bucket, IAM, and
+operator workflow.
 
 ## Run
 

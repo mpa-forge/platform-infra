@@ -44,6 +44,8 @@ Path: [environments/rc/versions.tf](../environments/rc/versions.tf)
 Pins Terraform and the `hashicorp/google` provider for the RC root.
 This makes the RC root self-contained and explicit about the provider contract
 it expects.
+It also configures the RC `backend "gcs"` block, storing state in
+`gs://mpa-forge-bp-tfstate-rc/rc/platform-infra`.
 
 #### `environments/rc/providers.tf`
 
@@ -105,6 +107,8 @@ consistent while remaining fully separate.
 Path: [environments/prod/versions.tf](../environments/prod/versions.tf)
 
 Pins Terraform and the Google provider for the prod root.
+It also configures the prod `backend "gcs"` block, storing state in
+`gs://mpa-forge-bp-tfstate-prod/prod/platform-infra`.
 
 #### `environments/prod/providers.tf`
 
@@ -424,7 +428,6 @@ That repetition is deliberate:
 
 This Phase 5 baseline intentionally does not yet include:
 
-- remote state backend configuration
 - AI worker Cloud Run Jobs and Scheduler resources
 - edge routing for `/api/*`
 - Grafana dashboard provisioning resources
