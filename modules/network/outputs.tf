@@ -22,3 +22,8 @@ output "private_service_access_range_name" {
   description = "Reserved peering range for Google-managed services."
   value       = try(google_compute_global_address.private_service_access[0].name, null)
 }
+
+output "private_service_access_connection_id" {
+  description = "Service networking connection id for private Google-managed services."
+  value       = try(google_service_networking_connection.private_service_access[0].id, null)
+}

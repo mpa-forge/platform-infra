@@ -30,6 +30,16 @@ variable "module_activation" {
     cloudrun_api = bool
     gke          = bool
   })
+
+  validation {
+    condition     = !var.module_activation.cloudsql || var.module_activation.network
+    error_message = "module_activation.network must be true when module_activation.cloudsql is true."
+  }
+
+  validation {
+    condition     = !var.module_activation.gke || var.module_activation.network
+    error_message = "module_activation.network must be true when module_activation.gke is true."
+  }
 }
 
 variable "network_name" {

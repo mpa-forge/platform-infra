@@ -19,3 +19,15 @@ output "service_contracts" {
     artifact_registry_repos   = module.gar.repository_ids
   }
 }
+
+output "network_contracts" {
+  description = "Network identifiers exported for runtime and database modules."
+  value = {
+    network_name                         = module.network.network_name
+    network_self_link                    = module.network.network_self_link
+    subnetwork_name                      = module.network.subnetwork_name
+    subnetwork_self_link                 = module.network.subnetwork_self_link
+    private_service_access_range_name    = module.network.private_service_access_range_name
+    private_service_access_connection_id = module.network.private_service_access_connection_id
+  }
+}

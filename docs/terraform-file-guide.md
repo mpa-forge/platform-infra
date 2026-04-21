@@ -186,7 +186,8 @@ contract.
 Path: [modules/network/outputs.tf](../modules/network/outputs.tf)
 
 Exports the network identifiers other modules need, such as the VPC and subnet
-self-links.
+self-links, plus the private service access range and connection identifier
+used for downstream dependency ordering.
 
 ### `modules/cloudrun_api/*`
 
