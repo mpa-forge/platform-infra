@@ -92,6 +92,8 @@ module "cloudsql" {
   database_name             = local.db_name
   private_network_self_link = module.network.network_self_link
   labels                    = local.labels
+
+  depends_on = [module.network]
 }
 
 module "cloudrun_api" {

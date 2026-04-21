@@ -93,6 +93,8 @@ module "cloudsql" {
   private_network_self_link = module.network.network_self_link
   labels                    = local.labels
   deletion_protection       = false
+
+  depends_on = [module.network]
 }
 
 module "cloudrun_api" {
