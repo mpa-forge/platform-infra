@@ -20,8 +20,11 @@ output "runtime_contract" {
     ingress                            = var.ingress
     allow_unauthenticated              = var.allow_unauthenticated
     container_port                     = var.container_port
+    cloudsql_enabled                   = var.cloudsql_enabled
     cloudsql_instance_connection_names = var.cloudsql_instance_connection_names
     cloudsql_mount_path                = var.cloudsql_mount_path
+    plain_env_names                    = sort(keys(var.plain_env))
+    secret_env_names                   = sort(keys(var.secret_env))
     startup_probe_path                 = var.startup_probe_path
     service_uri                        = try(google_cloud_run_v2_service.this[0].uri, null)
   }

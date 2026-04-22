@@ -125,7 +125,9 @@ variable "plain_env" {
         "APP_ENV",
         "LOG_LEVEL",
         "HTTP_PORT",
-        "DATABASE_URL",
+        "DB_HOST",
+        "DB_NAME",
+        "DB_USER",
         "AUTH_ISSUER_URL",
         "AUTH_AUDIENCE",
         "API_RUNTIME_PATH",
@@ -148,8 +150,13 @@ variable "secret_env" {
   default = {}
 
   validation {
-    condition     = !var.enabled || contains(keys(var.secret_env), "GRAFANA_OTLP_INGEST_TOKEN")
-    error_message = "secret_env must include GRAFANA_OTLP_INGEST_TOKEN when enabled."
+    condition = !var.enabled || alltrue([
+      for name in [
+        "DB_PASSWORD",
+        "GRAFANA_OTLP_INGEST_TOKEN"
+      ] : contains(keys(var.secret_env), name)
+    ])
+    error_message = "secret_env must include DB_PASSWORD and GRAFANA_OTLP_INGEST_TOKEN when enabled."
   }
 }
 
@@ -157,6 +164,12 @@ variable "cloudsql_instance_connection_names" {
   description = "Cloud SQL connection names mounted into the service."
   type        = list(string)
   default     = []
+}
+
+variable "cloudsql_enabled" {
+  description = "Whether to attach Cloud SQL socket volumes and grant Cloud SQL client IAM."
+  type        = bool
+  default     = false
 }
 
 variable "cloudsql_mount_path" {

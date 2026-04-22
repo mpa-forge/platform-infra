@@ -15,7 +15,9 @@ The Cloud Run service receives the backend API startup contract:
 - `APP_ENV`
 - `LOG_LEVEL`
 - `HTTP_PORT`
-- `DATABASE_URL`
+- `DB_HOST`
+- `DB_NAME`
+- `DB_USER`
 - `AUTH_ISSUER_URL`
 - `AUTH_AUDIENCE`
 - `API_RUNTIME_PATH`
@@ -23,11 +25,12 @@ The Cloud Run service receives the backend API startup contract:
 - `OBS_TELEMETRY_PROFILE`
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
 - `GRAFANA_CLOUD_INSTANCE_ID`
+- `DB_PASSWORD`
 - `GRAFANA_OTLP_INGEST_TOKEN`
 
-The Grafana ingest token is injected from Secret Manager. The module grants the
-runtime service account `roles/secretmanager.secretAccessor` on configured
-runtime secrets.
+`DB_PASSWORD` and the Grafana ingest token are injected from Secret Manager.
+The module grants the runtime service account
+`roles/secretmanager.secretAccessor` on configured runtime secrets.
 
 ## Cloud SQL Contract
 
@@ -39,9 +42,10 @@ name, the module:
 - grants the runtime service account `roles/cloudsql.client`
 
 `P5-T06` still owns database users, password material, and final live database
-connectivity validation. Until then, the environment root keeps a deterministic
-`DATABASE_URL` shape so the planned Cloud Run revision matches the backend API
-startup contract.
+connectivity validation. The canonical cloud database contract is now split
+into plain `DB_HOST`, `DB_NAME`, and `DB_USER` values plus Secret
+Manager-backed `DB_PASSWORD`; Terraform must not commit a full database URL
+containing credentials.
 
 ## Ingress And Invocation
 
