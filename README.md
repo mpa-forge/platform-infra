@@ -59,12 +59,12 @@ The repository keeps one Terraform root per environment and does not use
 Terraform workspaces for environment switching.
 
 The Cloud Run API module now owns the baseline runtime contract: service
-account, revision settings, startup env, Secret Manager-backed telemetry token,
-Cloud SQL socket attachment, ingress, optional invoker policy, and exported
-service/runtime outputs. Default `terraform.tfvars` files keep resource creation
-disabled until backend images, secret payloads, IAM, and rollout sequencing are
-ready. This still lets us validate module/root contracts and plan each
-environment from its dedicated root.
+account, revision settings, startup env, Secret Manager-backed telemetry and
+database password tokens, Cloud SQL socket attachment, ingress, optional invoker
+policy, and exported service/runtime outputs. Default `terraform.tfvars` files
+keep resource creation disabled until backend images, secret payloads, IAM, and
+rollout sequencing are ready. This still lets us validate module/root contracts
+and plan each environment from its dedicated root.
 
 Repo-local Terraform entrypoints:
 
@@ -90,6 +90,9 @@ See `docs/cloud-run-api-runtime.md` for the Phase 5 Cloud Run API runtime
 contract.
 See `docs/artifact-registry.md` for the regional GAR repository, cleanup, image
 tag, and IAM contract.
+See `docs/cloudsql-postgres.md` for the Cloud SQL PostgreSQL and password-only
+database secret contract, including named cost profiles such as `super_cheap`,
+`cheap_dev`, `rc`, and `prod`.
 
 ## Run
 

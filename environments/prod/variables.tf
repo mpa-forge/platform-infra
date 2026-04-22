@@ -138,9 +138,27 @@ variable "api_auth_audience" {
 }
 
 variable "api_database_user" {
-  description = "Database user name used in the API DATABASE_URL."
+  description = "Database user name used by the API split database env contract."
   type        = string
   default     = "platform_api"
+}
+
+variable "api_database_password" {
+  description = "Sensitive password for the API database user. Supply through a secure operator or CI variable, never terraform.tfvars."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "cloudsql_profile" {
+  description = "Named Cloud SQL cost and durability profile: super_cheap, cheap_dev, rc, or prod."
+  type        = string
+  default     = "super_cheap"
+
+  validation {
+    condition     = contains(["super_cheap", "cheap_dev", "rc", "prod"], var.cloudsql_profile)
+    error_message = "cloudsql_profile must be one of super_cheap, cheap_dev, rc, or prod."
+  }
 }
 
 variable "api_min_instance_count" {

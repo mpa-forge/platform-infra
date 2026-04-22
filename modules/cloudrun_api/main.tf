@@ -6,7 +6,7 @@ locals {
     var.annotations
   )
 
-  has_cloudsql = length(var.cloudsql_instance_connection_names) > 0
+  has_cloudsql = var.cloudsql_enabled
 }
 
 resource "google_service_account" "runtime" {

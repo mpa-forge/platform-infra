@@ -66,6 +66,8 @@ Defines the RC root's input contract:
 - per-module enable flags
 - network naming inputs
 - API image reference, auth inputs, port, scaling, and invocation controls
+- API database user and password secret naming
+- Cloud SQL cost and durability profile selection
 - observability inputs
 
 This file answers "what must be supplied to compose the RC environment?"
@@ -82,7 +84,8 @@ Composes the RC environment by:
 - keeping GKE optional and gated behind an explicit flag
 - wiring the Phase 3 observability secret contract into the Cloud Run path
 - composing the backend API startup environment contract, including auth,
-  database URL, direct OTLP settings, and `API_RUNTIME_PATH=cloud_run`
+  split database settings, direct OTLP settings, and
+  `API_RUNTIME_PATH=cloud_run`
 
 This is the actual environment assembly file.
 
@@ -253,6 +256,7 @@ Path: [modules/cloudsql/variables.tf](../modules/cloudsql/variables.tf)
 Defines the database module inputs:
 
 - instance and database naming
+- application database user naming
 - region and network attachment
 - tier and availability defaults
 - maintenance window
@@ -265,16 +269,18 @@ Path: [modules/cloudsql/main.tf](../modules/cloudsql/main.tf)
 Creates the PostgreSQL baseline:
 
 - a Cloud SQL PostgreSQL instance
+- the configured Cloud SQL edition and machine tier
 - backups and point-in-time recovery
 - private-IP networking
 - the primary application database
+- the API application user when the sensitive password input is provided
 
 #### `modules/cloudsql/outputs.tf`
 
 Path: [modules/cloudsql/outputs.tf](../modules/cloudsql/outputs.tf)
 
-Exports the instance name, connection name, and database name for consumers
-such as Cloud Run.
+Exports the instance name, connection name, database name, database user, and
+socket path for consumers such as Cloud Run.
 
 ### `modules/gar/*`
 
@@ -347,7 +353,7 @@ payload value itself.
 
 Path: [modules/secrets/outputs.tf](../modules/secrets/outputs.tf)
 
-Exports the resulting secret IDs keyed by logical name.
+Exports the resulting secret IDs and resource names keyed by logical name.
 
 ### `modules/gke/*`
 

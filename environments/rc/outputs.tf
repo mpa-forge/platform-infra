@@ -18,9 +18,20 @@ output "service_contracts" {
     api_runtime_contract      = module.cloudrun_api.runtime_contract
     grafana_token_secret_name = module.observability_support.grafana_token_secret_name
     cloudsql_connection_name  = module.cloudsql.instance_connection_name
-    artifact_registry_repos   = module.gar.repository_ids
-    artifact_registry_uris    = module.gar.repository_uris
-    image_uri_prefixes        = module.gar.image_uri_prefixes
+    api_database_contract = {
+      instance_name        = module.cloudsql.instance_name
+      instance_connection  = module.cloudsql.instance_connection_name
+      profile              = var.cloudsql_profile
+      edition              = module.cloudsql.edition
+      tier                 = module.cloudsql.tier
+      database_name        = module.cloudsql.database_name
+      database_user        = module.cloudsql.application_user_name
+      host                 = local.cloudsql_socket_path
+      password_secret_name = lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id)
+    }
+    artifact_registry_repos = module.gar.repository_ids
+    artifact_registry_uris  = module.gar.repository_uris
+    image_uri_prefixes      = module.gar.image_uri_prefixes
   }
 }
 
