@@ -65,7 +65,7 @@ Defines the RC root's input contract:
 - region defaults
 - per-module enable flags
 - network naming inputs
-- API image reference
+- API image reference, auth inputs, port, scaling, and invocation controls
 - observability inputs
 
 This file answers "what must be supplied to compose the RC environment?"
@@ -81,6 +81,8 @@ Composes the RC environment by:
 - keeping Cloud Run as the baseline runtime
 - keeping GKE optional and gated behind an explicit flag
 - wiring the Phase 3 observability secret contract into the Cloud Run path
+- composing the backend API startup environment contract, including auth,
+  database URL, direct OTLP settings, and `API_RUNTIME_PATH=cloud_run`
 
 This is the actual environment assembly file.
 
@@ -94,6 +96,7 @@ Exports the RC root's high-level contract, including:
 - runtime-path status
 - important service-facing outputs such as the Grafana token secret name and
   Cloud SQL connection name
+- the Cloud Run API service URI, runtime service account, and runtime contract
 
 This file is mainly for visibility and downstream integration.
 
@@ -205,6 +208,8 @@ Defines the Cloud Run API module inputs, including:
 
 - service identity and image reference
 - scaling and concurrency controls
+- ingress, launch-stage, and public invocation controls
+- container port and startup probe settings
 - plain env vars
 - secret-backed env vars
 - optional Cloud SQL connection names
@@ -218,17 +223,20 @@ Implements the baseline API runtime on Cloud Run by creating:
 - the runtime service account
 - Cloud SQL client IAM when Cloud SQL is attached
 - secret access IAM for runtime secrets
+- an optional unauthenticated invoker binding when explicitly enabled
 - the Cloud Run v2 service itself
 
 This is where the documented observability env and secret contract becomes real
-Terraform wiring.
+Terraform wiring. It also mounts Cloud SQL sockets at `/cloudsql` when the
+environment root provides instance connection names.
 
 #### `modules/cloudrun_api/outputs.tf`
 
 Path: [modules/cloudrun_api/outputs.tf](../modules/cloudrun_api/outputs.tf)
 
 Exports service identity and endpoint details, such as the service name, URI,
-and runtime service account email.
+runtime service account email, and the Cloud Run runtime contract consumed by
+later deployment, routing, and runtime-switch tasks.
 
 ### `modules/cloudsql/*`
 

@@ -30,6 +30,20 @@ locals {
   db_instance_name       = "platform-${var.environment}-db"
   db_name                = "platform_${var.environment}"
   gke_cluster_name       = "platform-${var.environment}"
+  cloudsql_socket_path   = module.cloudsql.instance_connection_name == null ? "/cloudsql/${var.project_id}:${var.region}:${local.db_instance_name}" : "/cloudsql/${module.cloudsql.instance_connection_name}"
+  api_database_url       = "postgres://${var.api_database_user}:change-me@/${local.db_name}?host=${local.cloudsql_socket_path}"
+  api_plain_env = merge(
+    {
+      APP_ENV          = var.environment
+      LOG_LEVEL        = var.api_log_level
+      HTTP_PORT        = tostring(var.api_container_port)
+      DATABASE_URL     = local.api_database_url
+      AUTH_ISSUER_URL  = var.api_auth_issuer_url
+      AUTH_AUDIENCE    = var.api_auth_audience
+      API_RUNTIME_PATH = "cloud_run"
+    },
+    module.observability_support.cloud_run_env
+  )
 }
 
 module "observability_support" {
@@ -105,9 +119,15 @@ module "cloudrun_api" {
   service_name                       = local.api_service_name
   service_account_id                 = local.api_service_account_id
   container_image                    = var.api_container_image
+  runtime_path                       = "cloud_run"
   labels                             = merge(local.labels, { service = "api" })
-  plain_env                          = module.observability_support.cloud_run_env
+  plain_env                          = local.api_plain_env
   secret_env                         = module.observability_support.cloud_run_secret_env
+  container_port                     = var.api_container_port
+  min_instance_count                 = var.api_min_instance_count
+  max_instance_count                 = var.api_max_instance_count
+  max_instance_request_concurrency   = var.api_max_instance_request_concurrency
+  allow_unauthenticated              = var.api_allow_unauthenticated
   cloudsql_instance_connection_names = module.cloudsql.instance_connection_name == null ? [] : [module.cloudsql.instance_connection_name]
 }
 

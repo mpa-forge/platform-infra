@@ -40,6 +40,11 @@ variable "module_activation" {
     condition     = !var.module_activation.gke || var.module_activation.network
     error_message = "module_activation.network must be true when module_activation.gke is true."
   }
+
+  validation {
+    condition     = !var.module_activation.cloudrun_api || var.module_activation.secrets
+    error_message = "module_activation.secrets must be true when module_activation.cloudrun_api is true."
+  }
 }
 
 variable "network_name" {
@@ -66,6 +71,60 @@ variable "private_service_access_prefix_length" {
 variable "api_container_image" {
   description = "Immutable container image reference for the API baseline."
   type        = string
+}
+
+variable "api_log_level" {
+  description = "Log level injected into the API runtime."
+  type        = string
+  default     = "info"
+}
+
+variable "api_container_port" {
+  description = "HTTP port exposed by the API container."
+  type        = number
+  default     = 8080
+}
+
+variable "api_auth_issuer_url" {
+  description = "Authentication issuer URL accepted by the API runtime."
+  type        = string
+  default     = "https://auth.prod.example.invalid"
+}
+
+variable "api_auth_audience" {
+  description = "Authentication audience accepted by the API runtime."
+  type        = string
+  default     = "platform-blueprint-api-prod"
+}
+
+variable "api_database_user" {
+  description = "Database user name used in the API DATABASE_URL."
+  type        = string
+  default     = "platform_api"
+}
+
+variable "api_min_instance_count" {
+  description = "Minimum Cloud Run API instances."
+  type        = number
+  default     = 0
+}
+
+variable "api_max_instance_count" {
+  description = "Maximum Cloud Run API instances."
+  type        = number
+  default     = 10
+}
+
+variable "api_max_instance_request_concurrency" {
+  description = "Maximum requests per Cloud Run API instance."
+  type        = number
+  default     = 80
+}
+
+variable "api_allow_unauthenticated" {
+  description = "Whether the Cloud Run API service grants allUsers invoker."
+  type        = bool
+  default     = false
 }
 
 variable "telemetry_profile" {

@@ -28,10 +28,39 @@ variable "container_image" {
   type        = string
 }
 
+variable "runtime_path" {
+  description = "Selected API runtime path represented in container env."
+  type        = string
+  default     = "cloud_run"
+
+  validation {
+    condition     = contains(["cloud_run"], var.runtime_path)
+    error_message = "Cloud Run API module runtime_path must be cloud_run."
+  }
+}
+
 variable "labels" {
   description = "Labels applied to the service and service account."
   type        = map(string)
   default     = {}
+}
+
+variable "annotations" {
+  description = "Annotations applied to the Cloud Run service."
+  type        = map(string)
+  default     = {}
+}
+
+variable "template_annotations" {
+  description = "Annotations applied to new Cloud Run revisions."
+  type        = map(string)
+  default     = {}
+}
+
+variable "launch_stage" {
+  description = "Cloud Run launch stage annotation value."
+  type        = string
+  default     = "GA"
 }
 
 variable "min_instance_count" {
@@ -58,10 +87,22 @@ variable "timeout" {
   default     = "300s"
 }
 
+variable "container_port" {
+  description = "Container port exposed by the API runtime."
+  type        = number
+  default     = 8080
+}
+
 variable "ingress" {
   description = "Ingress policy for the service."
   type        = string
   default     = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+}
+
+variable "allow_unauthenticated" {
+  description = "Whether to grant public unauthenticated invocation to allUsers."
+  type        = bool
+  default     = false
 }
 
 variable "container_limits" {
@@ -77,6 +118,25 @@ variable "plain_env" {
   description = "Plain environment variables injected into the container."
   type        = map(string)
   default     = {}
+
+  validation {
+    condition = !var.enabled || alltrue([
+      for name in [
+        "APP_ENV",
+        "LOG_LEVEL",
+        "HTTP_PORT",
+        "DATABASE_URL",
+        "AUTH_ISSUER_URL",
+        "AUTH_AUDIENCE",
+        "API_RUNTIME_PATH",
+        "OTEL_MODE",
+        "OBS_TELEMETRY_PROFILE",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "GRAFANA_CLOUD_INSTANCE_ID"
+      ] : contains(keys(var.plain_env), name)
+    ])
+    error_message = "plain_env must include the backend API Cloud Run startup environment contract when enabled."
+  }
 }
 
 variable "secret_env" {
@@ -86,10 +146,51 @@ variable "secret_env" {
     version = string
   }))
   default = {}
+
+  validation {
+    condition     = !var.enabled || contains(keys(var.secret_env), "GRAFANA_OTLP_INGEST_TOKEN")
+    error_message = "secret_env must include GRAFANA_OTLP_INGEST_TOKEN when enabled."
+  }
 }
 
 variable "cloudsql_instance_connection_names" {
   description = "Cloud SQL connection names mounted into the service."
   type        = list(string)
   default     = []
+}
+
+variable "cloudsql_mount_path" {
+  description = "Mount path for Cloud SQL Unix sockets."
+  type        = string
+  default     = "/cloudsql"
+}
+
+variable "startup_probe_path" {
+  description = "HTTP path used by the Cloud Run startup probe."
+  type        = string
+  default     = "/readyz"
+}
+
+variable "startup_probe_initial_delay_seconds" {
+  description = "Initial delay for the startup probe."
+  type        = number
+  default     = 0
+}
+
+variable "startup_probe_period_seconds" {
+  description = "Period between startup probe attempts."
+  type        = number
+  default     = 10
+}
+
+variable "startup_probe_timeout_seconds" {
+  description = "Startup probe timeout."
+  type        = number
+  default     = 5
+}
+
+variable "startup_probe_failure_threshold" {
+  description = "Startup probe failure threshold."
+  type        = number
+  default     = 12
 }
