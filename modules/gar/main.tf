@@ -31,6 +31,34 @@ resource "google_artifact_registry_repository" "this" {
   description   = each.value.description
   format        = each.value.format
   labels        = var.labels
+
+  dynamic "cleanup_policies" {
+    for_each = each.value.cleanup_policies
+    content {
+      id     = cleanup_policies.key
+      action = cleanup_policies.value.action
+
+      dynamic "condition" {
+        for_each = cleanup_policies.value.condition == null ? [] : [cleanup_policies.value.condition]
+        content {
+          tag_state             = condition.value.tag_state
+          tag_prefixes          = condition.value.tag_prefixes
+          version_name_prefixes = condition.value.version_name_prefixes
+          package_name_prefixes = condition.value.package_name_prefixes
+          older_than            = condition.value.older_than
+          newer_than            = condition.value.newer_than
+        }
+      }
+
+      dynamic "most_recent_versions" {
+        for_each = cleanup_policies.value.most_recent_versions == null ? [] : [cleanup_policies.value.most_recent_versions]
+        content {
+          keep_count            = most_recent_versions.value.keep_count
+          package_name_prefixes = most_recent_versions.value.package_name_prefixes
+        }
+      }
+    }
+  }
 }
 
 resource "google_artifact_registry_repository_iam_member" "ci_push" {

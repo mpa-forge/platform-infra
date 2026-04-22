@@ -19,6 +19,8 @@ output "service_contracts" {
     grafana_token_secret_name = module.observability_support.grafana_token_secret_name
     cloudsql_connection_name  = module.cloudsql.instance_connection_name
     artifact_registry_repos   = module.gar.repository_ids
+    artifact_registry_uris    = module.gar.repository_uris
+    image_uri_prefixes        = module.gar.image_uri_prefixes
   }
 }
 

@@ -88,6 +88,8 @@ See `docs/terraform-remote-state.md` for the state project, bucket, IAM, and
 operator workflow.
 See `docs/cloud-run-api-runtime.md` for the Phase 5 Cloud Run API runtime
 contract.
+See `docs/artifact-registry.md` for the regional GAR repository, cleanup, image
+tag, and IAM contract.
 
 ## Run
 
