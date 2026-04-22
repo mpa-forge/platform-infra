@@ -1,0 +1,72 @@
+# Cloud Run API Runtime
+
+This document describes the Phase 5 Cloud Run API baseline owned by
+`modules/cloudrun_api` and wired from `environments/rc` and
+`environments/prod`.
+
+## Runtime Contract
+
+Cloud Run is the first API runtime path. Each environment root selects it
+explicitly with `API_RUNTIME_PATH=cloud_run` and keeps the optional GKE path
+disabled unless a later reviewed change enables it.
+
+The Cloud Run service receives the backend API startup contract:
+
+- `APP_ENV`
+- `LOG_LEVEL`
+- `HTTP_PORT`
+- `DATABASE_URL`
+- `AUTH_ISSUER_URL`
+- `AUTH_AUDIENCE`
+- `API_RUNTIME_PATH`
+- `OTEL_MODE`
+- `OBS_TELEMETRY_PROFILE`
+- `OTEL_EXPORTER_OTLP_ENDPOINT`
+- `GRAFANA_CLOUD_INSTANCE_ID`
+- `GRAFANA_OTLP_INGEST_TOKEN`
+
+The Grafana ingest token is injected from Secret Manager. The module grants the
+runtime service account `roles/secretmanager.secretAccessor` on configured
+runtime secrets.
+
+## Cloud SQL Contract
+
+When the environment root enables Cloud SQL and passes an instance connection
+name, the module:
+
+- attaches the Cloud SQL instance to the Cloud Run revision template
+- mounts the Unix socket volume at `/cloudsql`
+- grants the runtime service account `roles/cloudsql.client`
+
+`P5-T06` still owns database users, password material, and final live database
+connectivity validation. Until then, the environment root keeps a deterministic
+`DATABASE_URL` shape so the planned Cloud Run revision matches the backend API
+startup contract.
+
+## Ingress And Invocation
+
+The default ingress is internal/load-balancer only:
+
+```hcl
+ingress = "INGRESS_TRAFFIC_INTERNAL_LOAD_BALANCER"
+```
+
+Public unauthenticated invocation is disabled by default. The module grants
+`roles/run.invoker` to `allUsers` only when an environment root explicitly sets
+`api_allow_unauthenticated = true`.
+
+The later `/api/*` routing task owns load-balancer, certificate, and URL map
+wiring in front of this service.
+
+## Validation
+
+Use repo-local Terraform entrypoints:
+
+```bash
+make terraform-validate
+make terraform-plan ENV=rc
+make terraform-plan ENV=prod
+```
+
+Default `terraform.tfvars` files keep resource creation disabled until image
+publishing, secret payloads, Cloud SQL users, and CI apply controls are ready.

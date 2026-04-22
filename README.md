@@ -58,9 +58,13 @@ Phase 5 now provides the initial Terraform repository skeleton:
 The repository keeps one Terraform root per environment and does not use
 Terraform workspaces for environment switching.
 
-Default `terraform.tfvars` files keep resource creation disabled until backend,
-IAM, and rollout sequencing are ready. This still lets us validate module/root
-contracts and plan each environment from its dedicated root.
+The Cloud Run API module now owns the baseline runtime contract: service
+account, revision settings, startup env, Secret Manager-backed telemetry token,
+Cloud SQL socket attachment, ingress, optional invoker policy, and exported
+service/runtime outputs. Default `terraform.tfvars` files keep resource creation
+disabled until backend images, secret payloads, IAM, and rollout sequencing are
+ready. This still lets us validate module/root contracts and plan each
+environment from its dedicated root.
 
 Repo-local Terraform entrypoints:
 
@@ -82,6 +86,8 @@ See `docs/terraform-file-guide.md` for a file-by-file explanation of the
 Terraform layout.
 See `docs/terraform-remote-state.md` for the state project, bucket, IAM, and
 operator workflow.
+See `docs/cloud-run-api-runtime.md` for the Phase 5 Cloud Run API runtime
+contract.
 
 ## Run
 

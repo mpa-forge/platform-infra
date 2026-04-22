@@ -13,7 +13,9 @@ output "service_contracts" {
   description = "Baseline service and secret contracts exported by the root."
   value = {
     api_service_name          = module.cloudrun_api.service_name
+    api_service_uri           = module.cloudrun_api.service_uri
     api_service_account_email = module.cloudrun_api.service_account_email
+    api_runtime_contract      = module.cloudrun_api.runtime_contract
     grafana_token_secret_name = module.observability_support.grafana_token_secret_name
     cloudsql_connection_name  = module.cloudsql.instance_connection_name
     artifact_registry_repos   = module.gar.repository_ids
