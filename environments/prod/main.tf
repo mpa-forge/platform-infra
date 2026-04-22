@@ -7,31 +7,60 @@ locals {
     region     = var.region
   }
 
-  gar_repositories = {
-    apps = {
-      description          = "Application images for ${var.environment}."
-      ci_push_members      = []
-      runtime_pull_members = []
-    }
-    workers = {
-      description          = "Worker images for ${var.environment}."
-      ci_push_members      = []
-      runtime_pull_members = []
-    }
-    tools = {
-      description          = "Tooling images for ${var.environment}."
-      ci_push_members      = []
-      runtime_pull_members = []
-    }
-  }
-
   api_service_name       = "api-${var.environment}"
   api_service_account_id = "api-${var.environment}-sa"
+  api_service_account    = "serviceAccount:${local.api_service_account_id}@${var.project_id}.iam.gserviceaccount.com"
   db_instance_name       = "platform-${var.environment}-db"
   db_name                = "platform_${var.environment}"
   gke_cluster_name       = "platform-${var.environment}"
-  cloudsql_socket_path   = module.cloudsql.instance_connection_name == null ? "/cloudsql/${var.project_id}:${var.region}:${local.db_instance_name}" : "/cloudsql/${module.cloudsql.instance_connection_name}"
-  api_database_url       = "postgres://${var.api_database_user}:change-me@/${local.db_name}?host=${local.cloudsql_socket_path}"
+  gar_cleanup_policies = {
+    delete-untagged = {
+      action = "DELETE"
+      condition = {
+        tag_state  = "UNTAGGED"
+        older_than = var.gar_untagged_retention
+      }
+    }
+    delete-old-sha = {
+      action = "DELETE"
+      condition = {
+        tag_state    = "TAGGED"
+        tag_prefixes = ["sha-"]
+        older_than   = var.gar_sha_tagged_retention
+      }
+    }
+    keep-recent-sha = {
+      action = "KEEP"
+      most_recent_versions = {
+        keep_count = var.gar_sha_keep_count
+      }
+    }
+  }
+  gar_repositories = {
+    apps = {
+      description          = "Application images for ${var.environment}."
+      image_names          = toset(["backend-api"])
+      ci_push_members      = lookup(var.gar_ci_push_members, "apps", toset([]))
+      runtime_pull_members = toset([local.api_service_account])
+      cleanup_policies     = local.gar_cleanup_policies
+    }
+    workers = {
+      description          = "Worker images for ${var.environment}."
+      image_names          = toset(["backend-worker", "platform-ai-workers"])
+      ci_push_members      = lookup(var.gar_ci_push_members, "workers", toset([]))
+      runtime_pull_members = var.gar_worker_runtime_pull_members
+      cleanup_policies     = local.gar_cleanup_policies
+    }
+    tools = {
+      description          = "Tooling images for ${var.environment}."
+      image_names          = toset([])
+      ci_push_members      = lookup(var.gar_ci_push_members, "tools", toset([]))
+      runtime_pull_members = var.gar_tool_runtime_pull_members
+      cleanup_policies     = local.gar_cleanup_policies
+    }
+  }
+  cloudsql_socket_path = module.cloudsql.instance_connection_name == null ? "/cloudsql/${var.project_id}:${var.region}:${local.db_instance_name}" : "/cloudsql/${module.cloudsql.instance_connection_name}"
+  api_database_url     = "postgres://${var.api_database_user}:change-me@/${local.db_name}?host=${local.cloudsql_socket_path}"
   api_plain_env = merge(
     {
       APP_ENV          = var.environment

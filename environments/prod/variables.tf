@@ -68,6 +68,46 @@ variable "private_service_access_prefix_length" {
   default     = 16
 }
 
+variable "gar_ci_push_members" {
+  description = "Repository-scoped CI principals that can push images, keyed by GAR repository id."
+  type        = map(set(string))
+  default = {
+    apps    = []
+    workers = []
+    tools   = []
+  }
+}
+
+variable "gar_worker_runtime_pull_members" {
+  description = "Additional worker runtime principals that can pull worker images."
+  type        = set(string)
+  default     = []
+}
+
+variable "gar_tool_runtime_pull_members" {
+  description = "Additional runtime principals that can pull tool images."
+  type        = set(string)
+  default     = []
+}
+
+variable "gar_untagged_retention" {
+  description = "Duration after which untagged GAR artifacts are pruned."
+  type        = string
+  default     = "604800s"
+}
+
+variable "gar_sha_tagged_retention" {
+  description = "Duration after which old SHA-tagged GAR artifacts are pruned."
+  type        = string
+  default     = "7776000s"
+}
+
+variable "gar_sha_keep_count" {
+  description = "Minimum recent SHA-tagged image versions retained per repository."
+  type        = number
+  default     = 30
+}
+
 variable "api_container_image" {
   description = "Immutable container image reference for the API baseline."
   type        = string

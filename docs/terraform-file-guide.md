@@ -293,6 +293,8 @@ Defines the GAR input contract:
 - project and region
 - labels
 - repository definitions
+- expected image names per repository
+- cleanup policy definitions
 - CI push members
 - runtime pull members
 
@@ -301,13 +303,16 @@ Defines the GAR input contract:
 Path: [modules/gar/main.tf](../modules/gar/main.tf)
 
 Creates Artifact Registry repositories and flattens IAM bindings so CI and
-runtime principals can be granted least-privilege access per repository.
+runtime principals can be granted least-privilege access per repository. Each
+repository also receives cleanup policy so untagged artifacts and old SHA-tagged
+images do not accumulate indefinitely.
 
 #### `modules/gar/outputs.tf`
 
 Path: [modules/gar/outputs.tf](../modules/gar/outputs.tf)
 
-Exports the created repository IDs keyed by logical name.
+Exports the created repository IDs, regional repository URI prefixes, and
+expected immutable image URI prefixes keyed by logical repository/image names.
 
 ### `modules/secrets/*`
 
