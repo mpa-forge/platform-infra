@@ -1,16 +1,15 @@
 variable "environment" {
   description = "Environment identifier."
   type        = string
-  default     = "rc"
-}
-
-variable "project_id" {
-  description = "Primary GCP project id for the environment."
-  type        = string
 }
 
 variable "state_project_id" {
   description = "Dedicated Terraform state project id."
+  type        = string
+}
+
+variable "project_id" {
+  description = "Primary GCP project id for the environment."
   type        = string
 }
 
@@ -27,9 +26,8 @@ variable "deployment_enabled" {
 }
 
 variable "deployment_preset" {
-  description = "Deployment preset that selects the runtime topology for RC."
+  description = "Deployment preset that selects the runtime topology for this environment."
   type        = string
-  default     = "single-vps"
 
   validation {
     condition = contains([
@@ -43,19 +41,24 @@ variable "deployment_preset" {
 }
 
 variable "frontend_public_url" {
-  description = "Optional externally managed frontend URL for RC presets that do not provision the frontend here."
+  description = "Optional externally managed frontend URL for presets that do not provision the frontend here."
   type        = string
   default     = null
+
+  validation {
+    condition     = var.frontend_public_url == null || trimspace(var.frontend_public_url) != ""
+    error_message = "frontend_public_url must be null or a non-empty string."
+  }
 }
 
 variable "ai_worker_lanes" {
   description = "AI worker lane definitions that need runtime identities and secret catalog entries."
   type = map(object({
-    target_repo           = string
-    service_account_id    = optional(string)
-    github_pat_secret_id  = optional(string)
-    agent_key_secret_id   = optional(string)
-    agent_key_enabled     = optional(bool, false)
+    target_repo          = string
+    service_account_id   = optional(string)
+    github_pat_secret_id = optional(string)
+    agent_key_secret_id  = optional(string)
+    agent_key_enabled    = optional(bool, false)
   }))
   default = {}
 }
@@ -141,13 +144,11 @@ variable "api_container_port" {
 variable "api_auth_issuer_url" {
   description = "Authentication issuer URL accepted by the API runtime."
   type        = string
-  default     = "https://auth.rc.example.invalid"
 }
 
 variable "api_auth_audience" {
   description = "Authentication audience accepted by the API runtime."
   type        = string
-  default     = "platform-blueprint-api-rc"
 }
 
 variable "api_database_user" {
@@ -164,61 +165,81 @@ variable "api_database_password" {
 }
 
 variable "vps_zone" {
-  description = "Zone used by the RC single-vps preset."
+  description = "Zone used by the single-vps preset."
   type        = string
   default     = "us-east4-b"
 }
 
 variable "vps_machine_type" {
-  description = "Machine type used by the RC single-vps preset."
+  description = "Machine type used by the single-vps preset."
   type        = string
   default     = "e2-medium"
 }
 
 variable "vps_boot_disk_image" {
-  description = "Boot disk image used by the RC single-vps preset."
+  description = "Boot disk image used by the single-vps preset."
   type        = string
   default     = "projects/debian-cloud/global/images/family/debian-12"
 }
 
 variable "vps_boot_disk_size_gb" {
-  description = "Boot disk size in GB used by the RC single-vps preset."
+  description = "Boot disk size in GB used by the single-vps preset."
   type        = number
   default     = 30
+
+  validation {
+    condition     = var.vps_boot_disk_size_gb >= 10
+    error_message = "vps_boot_disk_size_gb must be at least 10 GB."
+  }
 }
 
 variable "vps_allow_public_source_ranges" {
-  description = "CIDR ranges allowed to reach the public frontend and backend ports on the RC single VPS."
+  description = "CIDR ranges allowed to reach the public frontend and backend ports on the single VPS."
   type        = set(string)
   default     = ["0.0.0.0/0"]
 }
 
 variable "vps_allow_ssh_source_ranges" {
-  description = "CIDR ranges allowed to reach SSH on the RC single VPS."
+  description = "CIDR ranges allowed to reach SSH on the single VPS."
   type        = set(string)
   default     = ["35.235.240.0/20"]
 }
 
 variable "vps_frontend_port" {
-  description = "Frontend port exposed by the RC single-vps preset."
+  description = "Frontend port exposed by the single-vps preset."
   type        = number
   default     = 80
+
+  validation {
+    condition     = var.vps_frontend_port >= 1 && var.vps_frontend_port <= 65535
+    error_message = "vps_frontend_port must be between 1 and 65535."
+  }
 }
 
 variable "vps_backend_port" {
-  description = "Backend port exposed by the RC single-vps preset."
+  description = "Backend port exposed by the single-vps preset."
   type        = number
   default     = 8080
+
+  validation {
+    condition     = var.vps_backend_port >= 1 && var.vps_backend_port <= 65535
+    error_message = "vps_backend_port must be between 1 and 65535."
+  }
 }
 
 variable "vps_database_port" {
-  description = "Database port exposed internally by the RC single-vps preset."
+  description = "Database port exposed internally by the single-vps preset."
   type        = number
   default     = 5432
+
+  validation {
+    condition     = var.vps_database_port >= 1 && var.vps_database_port <= 65535
+    error_message = "vps_database_port must be between 1 and 65535."
+  }
 }
 
 variable "vps_startup_script" {
-  description = "Optional startup script for the RC single-vps preset."
+  description = "Optional startup script for the single-vps preset."
   type        = string
   default     = null
 }
@@ -279,7 +300,6 @@ variable "grafana_direct_otlp_endpoint" {
 variable "gke_collector_otlp_endpoint" {
   description = "Collector endpoint for the optional GKE path."
   type        = string
-  default     = "http://otel-collector.platform-rc.svc.cluster.local:4318"
 }
 
 variable "gke_cluster_secret_store_name" {

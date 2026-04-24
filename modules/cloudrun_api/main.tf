@@ -7,6 +7,12 @@ locals {
   )
 
   has_cloudsql = var.cloudsql_enabled
+
+  runtime_secret_access = {
+    for env_name, secret_ref in var.secret_env :
+    env_name => secret_ref
+    if contains(var.runtime_secret_access_env_names, env_name)
+  }
 }
 
 resource "google_service_account" "runtime" {
@@ -27,7 +33,7 @@ resource "google_project_iam_member" "cloudsql_client" {
 }
 
 resource "google_secret_manager_secret_iam_member" "runtime_secret_access" {
-  for_each = var.enabled ? var.secret_env : {}
+  for_each = var.enabled ? local.runtime_secret_access : {}
 
   project   = var.project_id
   secret_id = each.value.secret

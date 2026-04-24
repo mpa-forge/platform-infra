@@ -45,18 +45,33 @@ Phase 5 now provides the initial Terraform repository skeleton:
 
 - `environments/rc/`: explicit RC root with its own project boundary inputs
 - `environments/prod/`: explicit prod root with its own project boundary inputs
+- both roots now choose a `deployment_preset` while staying separate environments
 - `modules/network/`: VPC, subnet, and private service access baseline
 - `modules/cloudrun_api/`: Cloud Run API runtime baseline including the
   Phase 3 observability secret contract
 - `modules/gar/`: Artifact Registry repositories and IAM binding scaffolding
 - `modules/cloudsql/`: Cloud SQL PostgreSQL baseline
+- `modules/stack/`: shared environment assembly layer that derives module
+  activation from deployment presets
 - `modules/secrets/`: Secret Manager placeholders and IAM binding scaffolding
 - `modules/gke/`: optional GKE Autopilot skeleton, disabled by default
+- `modules/vps_stack/`: single-VM preset for low-cost frontend + backend +
+  Postgres deployments
 - `modules/observability_support/`: shared observability naming and env-contract
   outputs for Cloud Run and the optional GKE path
 
 The repository keeps one Terraform root per environment and does not use
 Terraform workspaces for environment switching.
+
+Each root now selects a deployment preset instead of hand-toggling individual
+modules. The current checked-in defaults are:
+
+- `rc`: `single-vps`
+- `prod`: `cloudrun-cloudsql`
+
+Set `deployment_enabled=true` when you want the selected preset to create
+resources; leaving it false keeps the topology selection explicit without
+turning on infrastructure by default.
 
 The Cloud Run API module now owns the baseline runtime contract: service
 account, revision settings, startup env, Secret Manager-backed telemetry and
@@ -84,6 +99,7 @@ Observability secret-delivery expectations remain documented in
 contract into the baseline Terraform wiring shape for later rollout tasks.
 See `docs/terraform-file-guide.md` for a file-by-file explanation of the
 Terraform layout.
+See `docs/deployment-presets.md` for the preset catalog and activation model.
 See `docs/terraform-remote-state.md` for the state project, bucket, IAM, and
 operator workflow.
 See `docs/cloud-run-api-runtime.md` for the Phase 5 Cloud Run API runtime

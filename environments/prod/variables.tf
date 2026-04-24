@@ -20,31 +20,44 @@ variable "region" {
   default     = "us-east4"
 }
 
-variable "module_activation" {
-  description = "Per-module creation toggles for the skeleton root."
-  type = object({
-    network      = bool
-    gar          = bool
-    cloudsql     = bool
-    secrets      = bool
-    cloudrun_api = bool
-    gke          = bool
-  })
+variable "deployment_enabled" {
+  description = "Whether the selected deployment preset should create infrastructure."
+  type        = bool
+  default     = false
+}
+
+variable "deployment_preset" {
+  description = "Deployment preset that selects the runtime topology for prod."
+  type        = string
+  default     = "cloudrun-cloudsql"
 
   validation {
-    condition     = !var.module_activation.cloudsql || var.module_activation.network
-    error_message = "module_activation.network must be true when module_activation.cloudsql is true."
+    condition = contains([
+      "single-vps",
+      "cloudrun-cloudsql",
+      "cloudrun-cdn-cloudsql",
+      "gke-cloudsql",
+    ], var.deployment_preset)
+    error_message = "deployment_preset must be one of single-vps, cloudrun-cloudsql, cloudrun-cdn-cloudsql, or gke-cloudsql."
   }
+}
 
-  validation {
-    condition     = !var.module_activation.gke || var.module_activation.network
-    error_message = "module_activation.network must be true when module_activation.gke is true."
-  }
+variable "frontend_public_url" {
+  description = "Optional externally managed frontend URL for prod presets that do not provision the frontend here."
+  type        = string
+  default     = null
+}
 
-  validation {
-    condition     = !var.module_activation.cloudrun_api || var.module_activation.secrets
-    error_message = "module_activation.secrets must be true when module_activation.cloudrun_api is true."
-  }
+variable "ai_worker_lanes" {
+  description = "AI worker lane definitions that need runtime identities and secret catalog entries."
+  type = map(object({
+    target_repo           = string
+    service_account_id    = optional(string)
+    github_pat_secret_id  = optional(string)
+    agent_key_secret_id   = optional(string)
+    agent_key_enabled     = optional(bool, false)
+  }))
+  default = {}
 }
 
 variable "network_name" {
@@ -150,6 +163,66 @@ variable "api_database_password" {
   sensitive   = true
 }
 
+variable "vps_zone" {
+  description = "Zone used by the prod single-vps preset."
+  type        = string
+  default     = "us-east4-b"
+}
+
+variable "vps_machine_type" {
+  description = "Machine type used by the prod single-vps preset."
+  type        = string
+  default     = "e2-medium"
+}
+
+variable "vps_boot_disk_image" {
+  description = "Boot disk image used by the prod single-vps preset."
+  type        = string
+  default     = "projects/debian-cloud/global/images/family/debian-12"
+}
+
+variable "vps_boot_disk_size_gb" {
+  description = "Boot disk size in GB used by the prod single-vps preset."
+  type        = number
+  default     = 30
+}
+
+variable "vps_allow_public_source_ranges" {
+  description = "CIDR ranges allowed to reach the public frontend and backend ports on the prod single VPS."
+  type        = set(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "vps_allow_ssh_source_ranges" {
+  description = "CIDR ranges allowed to reach SSH on the prod single VPS."
+  type        = set(string)
+  default     = ["35.235.240.0/20"]
+}
+
+variable "vps_frontend_port" {
+  description = "Frontend port exposed by the prod single-vps preset."
+  type        = number
+  default     = 80
+}
+
+variable "vps_backend_port" {
+  description = "Backend port exposed by the prod single-vps preset."
+  type        = number
+  default     = 8080
+}
+
+variable "vps_database_port" {
+  description = "Database port exposed internally by the prod single-vps preset."
+  type        = number
+  default     = 5432
+}
+
+variable "vps_startup_script" {
+  description = "Optional startup script for the prod single-vps preset."
+  type        = string
+  default     = null
+}
+
 variable "cloudsql_profile" {
   description = "Named Cloud SQL cost and durability profile: super_cheap, cheap_dev, rc, or prod."
   type        = string
@@ -207,4 +280,34 @@ variable "gke_collector_otlp_endpoint" {
   description = "Collector endpoint for the optional GKE path."
   type        = string
   default     = "http://otel-collector.platform-prod.svc.cluster.local:4318"
+}
+
+variable "gke_cluster_secret_store_name" {
+  description = "ClusterSecretStore name that Phase 6 should use for GSM-backed ESO sync."
+  type        = string
+  default     = "gcp-secret-manager"
+}
+
+variable "gke_external_secrets_namespace" {
+  description = "Namespace that will host the External Secrets Operator controller."
+  type        = string
+  default     = "external-secrets"
+}
+
+variable "gke_external_secrets_service_account_name" {
+  description = "Kubernetes service account name for the External Secrets Operator controller."
+  type        = string
+  default     = "external-secrets"
+}
+
+variable "gke_api_namespace" {
+  description = "Namespace for the backend API workload on the optional GKE path."
+  type        = string
+  default     = "platform-blueprint"
+}
+
+variable "gke_api_service_account_name" {
+  description = "Kubernetes service account name for the backend API workload on the optional GKE path."
+  type        = string
+  default     = "backend-api"
 }

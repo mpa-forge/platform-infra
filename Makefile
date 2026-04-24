@@ -16,7 +16,9 @@ TERRAFORM_VALIDATE_DIRS := \
 	modules/gke \
 	modules/gar \
 	modules/cloudsql \
+	modules/stack \
 	modules/secrets \
+	modules/vps_stack \
 	modules/observability_support
 
 .PHONY: help bootstrap doctor sync-agent-skills sync-agent-skills-check install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check terraform-init terraform-validate terraform-plan terraform-apply local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
