@@ -158,6 +158,40 @@ variable "secret_env" {
     ])
     error_message = "secret_env must include DB_PASSWORD and GRAFANA_OTLP_INGEST_TOKEN when enabled."
   }
+
+  validation {
+    condition = !var.enabled || alltrue([
+      for env_name, secret_ref in var.secret_env :
+      trim(env_name) != "" && trim(secret_ref.secret) != "" && trim(secret_ref.version) != ""
+    ])
+    error_message = "secret_env entries must use non-empty env var names, secret names, and versions."
+  }
+}
+
+variable "runtime_secret_access_env_names" {
+  description = "Explicit secret env var names that receive Secret Manager accessor IAM for least-privilege runtime access."
+  type        = set(string)
+  default = [
+    "DB_PASSWORD",
+    "GRAFANA_OTLP_INGEST_TOKEN"
+  ]
+
+  validation {
+    condition = !var.enabled || alltrue([
+      for name in [
+        "DB_PASSWORD",
+        "GRAFANA_OTLP_INGEST_TOKEN"
+      ] : contains(var.runtime_secret_access_env_names, name)
+    ])
+    error_message = "runtime_secret_access_env_names must include DB_PASSWORD and GRAFANA_OTLP_INGEST_TOKEN when enabled."
+  }
+
+  validation {
+    condition = !var.enabled || alltrue([
+      for name in var.runtime_secret_access_env_names : contains(keys(var.secret_env), name)
+    ])
+    error_message = "runtime_secret_access_env_names can only reference env vars defined in secret_env."
+  }
 }
 
 variable "cloudsql_instance_connection_names" {

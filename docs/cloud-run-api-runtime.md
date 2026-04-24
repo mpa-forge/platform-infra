@@ -30,7 +30,14 @@ The Cloud Run service receives the backend API startup contract:
 
 `DB_PASSWORD` and the Grafana ingest token are injected from Secret Manager.
 The module grants the runtime service account
-`roles/secretmanager.secretAccessor` on configured runtime secrets.
+`roles/secretmanager.secretAccessor` only for secret env vars listed in
+`runtime_secret_access_env_names` (default:
+`DB_PASSWORD`,`GRAFANA_OTLP_INGEST_TOKEN`). This keeps IAM grants explicit and
+least-privilege even if additional secret env vars are added later.
+
+The module also exports `runtime_secret_access_contract` so environment outputs
+can verify which secret env vars and Secret Manager IDs are actually bound to
+runtime IAM.
 
 ## Cloud SQL Contract
 

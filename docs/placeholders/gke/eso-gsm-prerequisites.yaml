@@ -1,0 +1,45 @@
+# Placeholder manifest for the optional GKE runtime path.
+# Fill values from module.gke.workload_identity_principals and
+# module.gke.eso_secret_mappings outputs when Phase 6 deploys ESO.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: eso-gsm-reader
+  namespace: platform-blueprint
+  annotations:
+    iam.gke.io/gcp-service-account: REPLACE_WITH_GSA_EMAIL
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: gcp-secret-manager
+spec:
+  provider:
+    gcpsm:
+      projectID: REPLACE_WITH_PROJECT_ID
+      auth:
+        workloadIdentity:
+          clusterLocation: REPLACE_WITH_GKE_REGION
+          clusterName: REPLACE_WITH_GKE_CLUSTER_NAME
+          serviceAccountRef:
+            name: eso-gsm-reader
+            namespace: platform-blueprint
+---
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: api-db-password
+  namespace: platform-blueprint
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: ClusterSecretStore
+    name: gcp-secret-manager
+  target:
+    name: backend-api-runtime-secrets
+    creationPolicy: Owner
+  data:
+    - secretKey: DB_PASSWORD
+      remoteRef:
+        key: REPLACE_WITH_SECRET_ID
+        version: latest

@@ -11,6 +11,9 @@ The Terraform layout follows one root per environment:
 - `environments/prod/` is the prod root
 - `modules/*/` contains reusable building blocks shared by both environments
 
+The roots now select a deployment preset instead of directly exposing a
+per-module activation object.
+
 Within each root or module, the file split is intentional:
 
 - `versions.tf`: Terraform and provider version requirements
@@ -63,9 +66,10 @@ Defines the RC root's input contract:
 
 - project and state-project boundaries
 - region defaults
-- per-module enable flags
+- deployment preset selection and activation
 - network naming inputs
 - API image reference, auth inputs, port, scaling, and invocation controls
+- single-VPS sizing and ingress defaults
 - API database user and password secret naming
 - Cloud SQL cost and durability profile selection
 - observability inputs
@@ -78,14 +82,9 @@ Path: [environments/rc/main.tf](../environments/rc/main.tf)
 
 Composes the RC environment by:
 
-- declaring shared labels and naming locals
-- calling the shared modules
-- keeping Cloud Run as the baseline runtime
-- keeping GKE optional and gated behind an explicit flag
-- wiring the Phase 3 observability secret contract into the Cloud Run path
-- composing the backend API startup environment contract, including auth,
-  split database settings, direct OTLP settings, and
-  `API_RUNTIME_PATH=cloud_run`
+- calling the shared `modules/stack` assembly layer
+- selecting the active deployment preset for RC
+- forwarding environment-specific inputs into the shared stack contract
 
 This is the actual environment assembly file.
 
@@ -96,10 +95,10 @@ Path: [environments/rc/outputs.tf](../environments/rc/outputs.tf)
 Exports the RC root's high-level contract, including:
 
 - project-boundary information
-- runtime-path status
+- preset-aware deployment status
 - important service-facing outputs such as the Grafana token secret name and
   Cloud SQL connection name
-- the Cloud Run API service URI, runtime service account, and runtime contract
+- normalized frontend, backend, database, and operational contracts
 
 This file is mainly for visibility and downstream integration.
 
@@ -136,9 +135,9 @@ Path: [environments/prod/main.tf](../environments/prod/main.tf)
 Composes the prod environment from the shared modules, with the same baseline
 shape as RC:
 
-- Cloud Run enabled by configuration when chosen
-- GKE available but disabled by default
-- observability and secret contracts wired the same way
+- the same shared stack module
+- a prod-specific preset default
+- the same normalized output shape
 
 This symmetry reduces drift between RC and prod.
 
@@ -355,6 +354,25 @@ Path: [modules/secrets/outputs.tf](../modules/secrets/outputs.tf)
 
 Exports the resulting secret IDs and resource names keyed by logical name.
 
+### `modules/stack/*`
+
+The shared stack module is now the environment composition layer. It:
+
+- maps `deployment_preset` to module activation
+- keeps environment policy separate from runtime topology
+- assembles the shared service, database, networking, and operational outputs
+- preserves one root per environment while removing duplicated root assembly
+
+### `modules/vps_stack/*`
+
+This module implements the first low-cost preset:
+
+- one VM
+- one static public IP
+- firewall rules for app and SSH access
+- startup metadata/script hooks
+- output contracts for frontend, backend, and localhost database access
+
 ### `modules/gke/*`
 
 #### `modules/gke/versions.tf`
@@ -441,6 +459,7 @@ That repetition is deliberate:
 - roots stay explicit and independently plannable
 - module contracts stay easy to scan
 - environment selection stays tied to directory path, not hidden workspace state
+- preset selection stays explicit without multiplying root directories
 - future tasks can extend one concern at a time without mixing contracts,
   providers, resources, and outputs into one large file
 
