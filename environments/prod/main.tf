@@ -1,53 +1,74 @@
 module "stack" {
   source = "../../modules/stack"
 
-  environment                         = var.environment
-  state_project_id                    = var.state_project_id
-  project_id                          = var.project_id
-  region                              = var.region
-  deployment_enabled                  = var.deployment_enabled
-  deployment_preset                   = var.deployment_preset
-  frontend_public_url                 = var.frontend_public_url
-  ai_worker_lanes                     = var.ai_worker_lanes
-  network_name                        = var.network_name
-  subnet_name                         = var.subnet_name
-  subnet_cidr                         = var.subnet_cidr
-  private_service_access_prefix_length = var.private_service_access_prefix_length
-  gar_ci_push_members                 = var.gar_ci_push_members
-  gar_worker_runtime_pull_members     = var.gar_worker_runtime_pull_members
-  gar_tool_runtime_pull_members       = var.gar_tool_runtime_pull_members
-  gar_untagged_retention              = var.gar_untagged_retention
-  gar_sha_tagged_retention            = var.gar_sha_tagged_retention
-  gar_sha_keep_count                  = var.gar_sha_keep_count
-  api_container_image                 = var.api_container_image
-  api_log_level                       = var.api_log_level
-  api_container_port                  = var.api_container_port
-  api_auth_issuer_url                 = var.api_auth_issuer_url
-  api_auth_audience                   = var.api_auth_audience
-  api_database_user                   = var.api_database_user
-  api_database_password               = var.api_database_password
-  vps_zone                            = var.vps_zone
-  vps_machine_type                    = var.vps_machine_type
-  vps_boot_disk_image                 = var.vps_boot_disk_image
-  vps_boot_disk_size_gb               = var.vps_boot_disk_size_gb
-  vps_allow_public_source_ranges      = var.vps_allow_public_source_ranges
-  vps_allow_ssh_source_ranges         = var.vps_allow_ssh_source_ranges
-  vps_frontend_port                   = var.vps_frontend_port
-  vps_backend_port                    = var.vps_backend_port
-  vps_database_port                   = var.vps_database_port
-  vps_startup_script                  = var.vps_startup_script
-  cloudsql_profile                    = var.cloudsql_profile
-  api_min_instance_count              = var.api_min_instance_count
-  api_max_instance_count              = var.api_max_instance_count
-  api_max_instance_request_concurrency = var.api_max_instance_request_concurrency
-  api_allow_unauthenticated           = var.api_allow_unauthenticated
-  telemetry_profile                   = var.telemetry_profile
-  grafana_cloud_instance_id           = var.grafana_cloud_instance_id
-  grafana_direct_otlp_endpoint        = var.grafana_direct_otlp_endpoint
-  gke_collector_otlp_endpoint         = var.gke_collector_otlp_endpoint
-  gke_cluster_secret_store_name       = var.gke_cluster_secret_store_name
-  gke_external_secrets_namespace      = var.gke_external_secrets_namespace
+  environment                               = var.environment
+  state_project_id                          = var.state_project_id
+  project_id                                = var.project_id
+  region                                    = var.region
+  deployment_enabled                        = var.deployment_enabled
+  deployment_preset                         = var.deployment_preset
+  frontend_public_url                       = var.frontend_public_url
+  ai_worker_lanes                           = var.ai_worker_lanes
+  network_name                              = var.network_name
+  subnet_name                               = var.subnet_name
+  subnet_cidr                               = var.subnet_cidr
+  private_service_access_prefix_length      = var.private_service_access_prefix_length
+  gar_ci_push_members                       = var.gar_ci_push_members
+  gar_worker_runtime_pull_members           = var.gar_worker_runtime_pull_members
+  gar_tool_runtime_pull_members             = var.gar_tool_runtime_pull_members
+  gar_untagged_retention                    = var.gar_untagged_retention
+  gar_sha_tagged_retention                  = var.gar_sha_tagged_retention
+  gar_sha_keep_count                        = var.gar_sha_keep_count
+  api_container_image                       = var.api_container_image
+  api_log_level                             = var.api_log_level
+  api_container_port                        = var.api_container_port
+  api_auth_issuer_url                       = var.api_auth_issuer_url
+  api_auth_audience                         = var.api_auth_audience
+  api_database_user                         = var.api_database_user
+  api_database_password                     = var.api_database_password
+  vps_zone                                  = var.vps_zone
+  vps_machine_type                          = var.vps_machine_type
+  vps_boot_disk_image                       = var.vps_boot_disk_image
+  vps_boot_disk_size_gb                     = var.vps_boot_disk_size_gb
+  vps_allow_public_source_ranges            = var.vps_allow_public_source_ranges
+  vps_allow_ssh_source_ranges               = var.vps_allow_ssh_source_ranges
+  vps_frontend_port                         = var.vps_frontend_port
+  vps_backend_port                          = var.vps_backend_port
+  vps_database_port                         = var.vps_database_port
+  vps_startup_script                        = var.vps_startup_script
+  cloudsql_profile                          = var.cloudsql_profile
+  api_min_instance_count                    = var.api_min_instance_count
+  api_max_instance_count                    = var.api_max_instance_count
+  api_max_instance_request_concurrency      = var.api_max_instance_request_concurrency
+  api_allow_unauthenticated                 = var.api_allow_unauthenticated
+  telemetry_profile                         = var.telemetry_profile
+  grafana_cloud_instance_id                 = var.grafana_cloud_instance_id
+  grafana_direct_otlp_endpoint              = var.grafana_direct_otlp_endpoint
+  gke_collector_otlp_endpoint               = var.gke_collector_otlp_endpoint
+  gke_cluster_secret_store_name             = var.gke_cluster_secret_store_name
+  gke_external_secrets_namespace            = var.gke_external_secrets_namespace
   gke_external_secrets_service_account_name = var.gke_external_secrets_service_account_name
-  gke_api_namespace                   = var.gke_api_namespace
-  gke_api_service_account_name        = var.gke_api_service_account_name
+  gke_api_namespace                         = var.gke_api_namespace
+  gke_api_service_account_name              = var.gke_api_service_account_name
+}
+
+locals {
+  grafana_dashboard_source_root = coalesce(
+    var.grafana_dashboard_source_root,
+    abspath("${path.root}/../..")
+  )
+  grafana_dashboard_manifest_path = coalesce(
+    var.grafana_dashboard_manifest_path,
+    abspath("${local.grafana_dashboard_source_root}/docs/grafana-dashboards/manifest.json")
+  )
+}
+
+module "grafana_dashboards" {
+  source = "../../modules/grafana_dashboards"
+
+  environment             = var.environment
+  dashboard_manifest_path = local.grafana_dashboard_manifest_path
+  dashboard_source_root   = local.grafana_dashboard_source_root
+  folder_title            = var.grafana_dashboard_folder_title
+  folder_uid              = var.grafana_dashboard_folder_uid
 }

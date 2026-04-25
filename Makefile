@@ -15,6 +15,7 @@ TERRAFORM_VALIDATE_DIRS := \
 	modules/cloudrun_api \
 	modules/gke \
 	modules/gar \
+	modules/grafana_dashboards \
 	modules/cloudsql \
 	modules/stack \
 	modules/secrets \

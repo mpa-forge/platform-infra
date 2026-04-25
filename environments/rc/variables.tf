@@ -51,11 +51,11 @@ variable "frontend_public_url" {
 variable "ai_worker_lanes" {
   description = "AI worker lane definitions that need runtime identities and secret catalog entries."
   type = map(object({
-    target_repo           = string
-    service_account_id    = optional(string)
-    github_pat_secret_id  = optional(string)
-    agent_key_secret_id   = optional(string)
-    agent_key_enabled     = optional(bool, false)
+    target_repo          = string
+    service_account_id   = optional(string)
+    github_pat_secret_id = optional(string)
+    agent_key_secret_id  = optional(string)
+    agent_key_enabled    = optional(bool, false)
   }))
   default = {}
 }
@@ -274,6 +274,55 @@ variable "grafana_direct_otlp_endpoint" {
   description = "Grafana Cloud direct OTLP endpoint."
   type        = string
   default     = "https://otlp-gateway-prod-us-east-3.grafana.net/otlp"
+}
+
+variable "grafana_stack_url" {
+  description = "Grafana Cloud stack URL used by the dashboard provisioning provider."
+  type        = string
+  default     = "https://miquelpizaairas.grafana.net"
+}
+
+variable "grafana_dashboard_folder_title" {
+  description = "Grafana folder title for the baseline dashboard set."
+  type        = string
+  default     = "Platform / RC"
+}
+
+variable "grafana_dashboard_folder_uid" {
+  description = "Stable Grafana folder UID for the baseline dashboard set."
+  type        = string
+  default     = "platform-rc"
+}
+
+variable "grafana_dashboard_manifest_path" {
+  description = "Optional absolute path override for the Grafana dashboard manifest."
+  type        = string
+  default     = null
+}
+
+variable "grafana_dashboard_source_root" {
+  description = "Optional absolute repository root override used to resolve Grafana dashboard asset paths."
+  type        = string
+  default     = null
+}
+
+variable "grafana_dashboard_provisioning_token" {
+  description = "Optional Grafana API token used to provision dashboard folders and dashboards."
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "grafana_dashboard_provisioning_token_secret_name" {
+  description = "Optional Secret Manager secret name that stores the Grafana dashboard provisioning token."
+  type        = string
+  default     = null
+}
+
+variable "grafana_dashboard_provisioning_token_secret_version" {
+  description = "Secret version used when resolving the Grafana dashboard provisioning token from Secret Manager."
+  type        = string
+  default     = "latest"
 }
 
 variable "gke_collector_otlp_endpoint" {
