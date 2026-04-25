@@ -55,3 +55,8 @@ Each root now exports `deployment_contract` with:
 
 `service_contracts` also includes these normalized preset-aware fields so
 existing consumers can transition gradually.
+
+## Runbook
+
+For the operator workflow to switch an environment from one preset to another,
+see [docs/runbooks/change-environment-preset.md](/C:/Users/Miquel/dev/platform-infra/docs/runbooks/change-environment-preset.md).

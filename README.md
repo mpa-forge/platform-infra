@@ -51,6 +51,7 @@ Phase 5 now provides the initial Terraform repository skeleton:
   Phase 3 observability secret contract
 - `modules/gar/`: Artifact Registry repositories and IAM binding scaffolding
 - `modules/cloudsql/`: Cloud SQL PostgreSQL baseline
+- `modules/grafana_dashboards/`: source-controlled Grafana folder and dashboard provisioning
 - `modules/stack/`: shared environment assembly layer that derives module
   activation from deployment presets
 - `modules/secrets/`: Secret Manager placeholders and IAM binding scaffolding
@@ -97,6 +98,12 @@ access token from the active `gcloud` account when ADC is not configured.
 Observability secret-delivery expectations remain documented in
 `docs/observability-secret-delivery.md`, and the Cloud Run module now turns that
 contract into the baseline Terraform wiring shape for later rollout tasks.
+Grafana dashboard provisioning now consumes the source-controlled dashboard JSON
+under `docs/grafana-dashboards/` through the env roots and the
+`modules/grafana_dashboards` module. Provide a Grafana API token either through
+`TF_VAR_grafana_dashboard_provisioning_token` or by pointing
+`grafana_dashboard_provisioning_token_secret_name` at a Secret Manager secret
+that contains a write-capable dashboard provisioning token.
 See `docs/terraform-file-guide.md` for a file-by-file explanation of the
 Terraform layout.
 See `docs/deployment-presets.md` for the preset catalog and activation model.
