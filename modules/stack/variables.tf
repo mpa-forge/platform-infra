@@ -40,6 +40,50 @@ variable "deployment_preset" {
   }
 }
 
+variable "vps_preset" {
+  description = "Sizing preset for the single-VPS module."
+  type        = string
+  default     = "standard"
+
+  validation {
+    condition     = contains(["standard", "cheap"], var.vps_preset)
+    error_message = "vps_preset must be one of standard or cheap."
+  }
+}
+
+variable "cloudrun_preset" {
+  description = "Sizing preset for the Cloud Run API module."
+  type        = string
+  default     = "standard"
+
+  validation {
+    condition     = contains(["standard", "cheap"], var.cloudrun_preset)
+    error_message = "cloudrun_preset must be one of standard or cheap."
+  }
+}
+
+variable "artifact_registry_preset" {
+  description = "Retention preset for Artifact Registry repositories."
+  type        = string
+  default     = "standard"
+
+  validation {
+    condition     = contains(["standard", "cheap"], var.artifact_registry_preset)
+    error_message = "artifact_registry_preset must be one of standard or cheap."
+  }
+}
+
+variable "secret_manager_preset" {
+  description = "Secret Manager footprint preset for runtime secret wiring."
+  type        = string
+  default     = "standard"
+
+  validation {
+    condition     = contains(["standard", "cheap"], var.secret_manager_preset)
+    error_message = "secret_manager_preset must be one of standard or cheap."
+  }
+}
+
 variable "frontend_public_url" {
   description = "Optional externally managed frontend URL for presets that do not provision the frontend here."
   type        = string
@@ -193,6 +237,18 @@ variable "vps_boot_disk_size_gb" {
   }
 }
 
+variable "vps_boot_disk_type" {
+  description = "Boot disk type used by the single-vps preset."
+  type        = string
+  default     = "pd-balanced"
+}
+
+variable "vps_use_static_public_ip" {
+  description = "Whether the single-vps preset should reserve a static public IPv4 address."
+  type        = bool
+  default     = true
+}
+
 variable "vps_allow_public_source_ranges" {
   description = "CIDR ranges allowed to reach the public frontend and backend ports on the single VPS."
   type        = set(string)
@@ -277,6 +333,15 @@ variable "api_allow_unauthenticated" {
   description = "Whether the Cloud Run API service grants allUsers invoker."
   type        = bool
   default     = false
+}
+
+variable "api_container_limits" {
+  description = "Container resource limits for the Cloud Run API service."
+  type        = map(string)
+  default = {
+    cpu    = "1"
+    memory = "512Mi"
+  }
 }
 
 variable "telemetry_profile" {

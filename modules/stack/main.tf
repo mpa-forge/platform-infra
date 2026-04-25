@@ -71,6 +71,61 @@ locals {
   }
 
   stack_config = local.preset_catalog[var.deployment_preset]
+  vps_presets = {
+    standard = {
+      machine_type         = var.vps_machine_type
+      boot_disk_size_gb    = var.vps_boot_disk_size_gb
+      boot_disk_type       = var.vps_boot_disk_type
+      use_static_public_ip = var.vps_use_static_public_ip
+    }
+    cheap = {
+      machine_type         = "e2-small"
+      boot_disk_size_gb    = 20
+      boot_disk_type       = "pd-standard"
+      use_static_public_ip = false
+    }
+  }
+  cloudrun_presets = {
+    standard = {
+      min_instance_count               = var.api_min_instance_count
+      max_instance_count               = var.api_max_instance_count
+      max_instance_request_concurrency = var.api_max_instance_request_concurrency
+      container_limits                 = var.api_container_limits
+    }
+    cheap = {
+      min_instance_count               = 0
+      max_instance_count               = 2
+      max_instance_request_concurrency = 20
+      container_limits = {
+        cpu    = "1"
+        memory = "256Mi"
+      }
+    }
+  }
+  artifact_registry_presets = {
+    standard = {
+      untagged_retention   = var.gar_untagged_retention
+      sha_tagged_retention = var.gar_sha_tagged_retention
+      sha_keep_count       = var.gar_sha_keep_count
+    }
+    cheap = {
+      untagged_retention   = "86400s"
+      sha_tagged_retention = "604800s"
+      sha_keep_count       = 5
+    }
+  }
+  secret_manager_presets = {
+    standard = {
+      telemetry_profile = var.telemetry_profile
+    }
+    cheap = {
+      telemetry_profile = "off"
+    }
+  }
+  selected_vps_preset               = local.vps_presets[var.vps_preset]
+  selected_cloudrun_preset          = local.cloudrun_presets[var.cloudrun_preset]
+  selected_artifact_registry_preset = local.artifact_registry_presets[var.artifact_registry_preset]
+  selected_secret_manager_preset    = local.secret_manager_presets[var.secret_manager_preset]
   module_activation = {
     for module_name, enabled in local.stack_config.module_activation :
     module_name => var.deployment_enabled && enabled
@@ -126,8 +181,10 @@ locals {
     local.stack_config.backend_runtime == "vps" ? "manual-vps" : null,
   ]))
 
+  telemetry_enabled = module.observability_support.telemetry_enabled
+
   runtime_secret_catalog = merge(
-    {
+    local.telemetry_enabled ? {
       grafana_otlp_ingest_token = {
         secret_id         = module.observability_support.grafana_token_secret_name
         cloud_run_env_var = local.stack_config.backend_runtime == "cloud_run" ? "GRAFANA_OTLP_INGEST_TOKEN" : null
@@ -145,6 +202,8 @@ locals {
           phase_owner = "deployment-presets"
         }
       }
+    } : {},
+    {
       api_db_password = {
         secret_id         = local.db_password_secret_id
         cloud_run_env_var = local.stack_config.backend_runtime == "cloud_run" ? "DB_PASSWORD" : null
@@ -269,7 +328,7 @@ locals {
       action = "DELETE"
       condition = {
         tag_state  = "UNTAGGED"
-        older_than = var.gar_untagged_retention
+        older_than = local.selected_artifact_registry_preset.untagged_retention
       }
     }
     delete-old-sha = {
@@ -277,13 +336,13 @@ locals {
       condition = {
         tag_state    = "TAGGED"
         tag_prefixes = ["sha-"]
-        older_than   = var.gar_sha_tagged_retention
+        older_than   = local.selected_artifact_registry_preset.sha_tagged_retention
       }
     }
     keep-recent-sha = {
       action = "KEEP"
       most_recent_versions = {
-        keep_count = var.gar_sha_keep_count
+        keep_count = local.selected_artifact_registry_preset.sha_keep_count
       }
     }
   }
@@ -444,12 +503,20 @@ locals {
     active_preset      = var.deployment_preset
     deployment_enabled = var.deployment_enabled
     module_activation  = local.module_activation
+    module_presets = {
+      vps               = var.vps_preset
+      cloudrun_api      = var.cloudrun_preset
+      artifact_registry = var.artifact_registry_preset
+      secret_manager    = var.secret_manager_preset
+      cloudsql          = var.cloudsql_profile
+    }
     image_uri_prefixes = module.gar.image_uri_prefixes
     artifact_registry = {
       repositories = module.gar.repository_ids
       uris         = module.gar.repository_uris
     }
     observability_mode = local.stack_config.observability
+    telemetry_enabled  = local.telemetry_enabled
     runtime_baseline   = "cloud_run"
     backend_runtime    = local.stack_config.backend_runtime
   }
@@ -519,7 +586,7 @@ module "observability_support" {
   source = "../../modules/observability_support"
 
   environment               = var.environment
-  telemetry_profile         = var.telemetry_profile
+  telemetry_profile         = local.selected_secret_manager_preset.telemetry_profile
   grafana_cloud_instance_id = var.grafana_cloud_instance_id
   direct_otlp_endpoint      = var.grafana_direct_otlp_endpoint
   collector_otlp_endpoint   = var.gke_collector_otlp_endpoint
@@ -608,11 +675,19 @@ module "cloudrun_api" {
       }
     }
   )
-  runtime_secret_access_env_names  = toset(["DB_PASSWORD", "GRAFANA_OTLP_INGEST_TOKEN"])
+  required_secret_env_names = toset(concat(
+    ["DB_PASSWORD"],
+    local.telemetry_enabled ? ["GRAFANA_OTLP_INGEST_TOKEN"] : []
+  ))
+  runtime_secret_access_env_names = toset(concat(
+    ["DB_PASSWORD"],
+    local.telemetry_enabled ? ["GRAFANA_OTLP_INGEST_TOKEN"] : []
+  ))
   container_port                   = var.api_container_port
-  min_instance_count               = var.api_min_instance_count
-  max_instance_count               = var.api_max_instance_count
-  max_instance_request_concurrency = var.api_max_instance_request_concurrency
+  min_instance_count               = local.selected_cloudrun_preset.min_instance_count
+  max_instance_count               = local.selected_cloudrun_preset.max_instance_count
+  max_instance_request_concurrency = local.selected_cloudrun_preset.max_instance_request_concurrency
+  container_limits                 = local.selected_cloudrun_preset.container_limits
   allow_unauthenticated            = var.api_allow_unauthenticated
   cloudsql_instance_connection_names = (
     module.cloudsql.instance_connection_name == null ? [] : [module.cloudsql.instance_connection_name]
@@ -636,30 +711,34 @@ module "gke" {
       google_service_account_id  = principal.account_id
       kubernetes_namespace       = principal.kubernetes_namespace
       kubernetes_service_account = principal.kubernetes_service_account
-      secret_ids = toset([
-        lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name),
-        lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id),
-      ])
+      secret_ids = toset(concat(
+        [lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id)],
+        local.telemetry_enabled ? [lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name)] : []
+      ))
       display_name = "GKE secret sync (${principal_key})"
       description  = "Workload Identity principal for ${principal.kubernetes_namespace}/${principal.kubernetes_service_account}."
     }
   }
-  eso_secret_mappings = {
-    grafana_otlp_ingest_token = {
-      secret_id              = lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name)
-      kubernetes_namespace   = var.gke_api_namespace
-      kubernetes_secret_name = "backend-api-runtime-secrets"
-      kubernetes_secret_key  = "GRAFANA_OTLP_INGEST_TOKEN"
-      version                = "latest"
+  eso_secret_mappings = merge(
+    local.telemetry_enabled ? {
+      grafana_otlp_ingest_token = {
+        secret_id              = lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name)
+        kubernetes_namespace   = var.gke_api_namespace
+        kubernetes_secret_name = "backend-api-runtime-secrets"
+        kubernetes_secret_key  = "GRAFANA_OTLP_INGEST_TOKEN"
+        version                = "latest"
+      }
+    } : {},
+    {
+      api_db_password = {
+        secret_id              = lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id)
+        kubernetes_namespace   = var.gke_api_namespace
+        kubernetes_secret_name = "backend-api-runtime-secrets"
+        kubernetes_secret_key  = "DB_PASSWORD"
+        version                = "latest"
+      }
     }
-    api_db_password = {
-      secret_id              = lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id)
-      kubernetes_namespace   = var.gke_api_namespace
-      kubernetes_secret_name = "backend-api-runtime-secrets"
-      kubernetes_secret_key  = "DB_PASSWORD"
-      version                = "latest"
-    }
-  }
+  )
 }
 
 module "vps_stack" {
@@ -673,9 +752,11 @@ module "vps_stack" {
   service_account_id   = local.vps_service_account_id
   network_self_link    = module.network.network_self_link
   subnetwork_self_link = module.network.subnetwork_self_link
-  machine_type         = var.vps_machine_type
+  machine_type         = local.selected_vps_preset.machine_type
   boot_disk_image      = var.vps_boot_disk_image
-  boot_disk_size_gb    = var.vps_boot_disk_size_gb
+  boot_disk_size_gb    = local.selected_vps_preset.boot_disk_size_gb
+  boot_disk_type       = local.selected_vps_preset.boot_disk_type
+  use_static_public_ip = local.selected_vps_preset.use_static_public_ip
   public_source_ranges = var.vps_allow_public_source_ranges
   ssh_source_ranges    = var.vps_allow_ssh_source_ranges
   frontend_port        = var.vps_frontend_port

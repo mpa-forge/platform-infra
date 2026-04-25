@@ -62,6 +62,23 @@ variable "boot_disk_size_gb" {
   default     = 30
 }
 
+variable "boot_disk_type" {
+  description = "Persistent disk type for the VM boot disk."
+  type        = string
+  default     = "pd-balanced"
+
+  validation {
+    condition     = contains(["pd-standard", "pd-balanced", "pd-ssd"], var.boot_disk_type)
+    error_message = "boot_disk_type must be one of pd-standard, pd-balanced, or pd-ssd."
+  }
+}
+
+variable "use_static_public_ip" {
+  description = "Whether to reserve and attach a static public IPv4 address instead of using an ephemeral IP."
+  type        = bool
+  default     = true
+}
+
 variable "public_source_ranges" {
   description = "CIDR ranges allowed to reach the public app ports."
   type        = set(string)

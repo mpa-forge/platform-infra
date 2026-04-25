@@ -15,6 +15,9 @@ Each environment root selects:
 resources for that topology.
 
 This replaces the old per-module activation toggles with one explicit preset.
+Cost tuning is now a second, independent layer applied through per-module
+presets such as `vps_preset`, `cloudrun_preset`, `artifact_registry_preset`,
+`secret_manager_preset`, and the existing `cloudsql_profile`.
 
 ## Preset Catalog
 
@@ -55,6 +58,21 @@ Each root now exports `deployment_contract` with:
 
 `service_contracts` also includes these normalized preset-aware fields so
 existing consumers can transition gradually.
+
+## Cost Tuning
+
+Deployment presets choose topology. They do not force one global cost posture.
+Operators can mix module presets per environment, for example:
+
+- `deployment_preset = "single-vps"` with `vps_preset = "cheap"`
+- `deployment_preset = "cloudrun-cloudsql"` with:
+  - `cloudrun_preset = "cheap"`
+  - `artifact_registry_preset = "cheap"`
+  - `secret_manager_preset = "cheap"`
+  - `cloudsql_profile = "super_cheap"`
+
+See [docs/module-cost-presets.md](/C:/Users/Miquel/dev/platform-infra/docs/module-cost-presets.md)
+for the module-level preset catalog.
 
 ## Runbook
 

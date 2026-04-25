@@ -67,6 +67,7 @@ Defines the RC root's input contract:
 - project and state-project boundaries
 - region defaults
 - deployment preset selection and activation
+- per-module cost preset selection
 - network naming inputs
 - API image reference, auth inputs, port, scaling, and invocation controls
 - single-VPS sizing and ingress defaults
@@ -359,6 +360,8 @@ Exports the resulting secret IDs and resource names keyed by logical name.
 The shared stack module is now the environment composition layer. It:
 
 - maps `deployment_preset` to module activation
+- applies module-level cost presets such as VPS sizing, Cloud Run scaling,
+  Artifact Registry retention, and Secret Manager footprint
 - keeps environment policy separate from runtime topology
 - assembles the shared service, database, networking, and operational outputs
 - preserves one root per environment while removing duplicated root assembly
@@ -368,7 +371,7 @@ The shared stack module is now the environment composition layer. It:
 This module implements the first low-cost preset:
 
 - one VM
-- one static public IP
+- optional static or ephemeral public IP
 - firewall rules for app and SSH access
 - startup metadata/script hooks
 - output contracts for frontend, backend, and localhost database access

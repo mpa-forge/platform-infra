@@ -6,6 +6,11 @@ variable "environment" {
 variable "telemetry_profile" {
   description = "Service-facing telemetry profile."
   type        = string
+
+  validation {
+    condition     = contains(["off", "minimal", "balanced"], var.telemetry_profile)
+    error_message = "telemetry_profile must be one of off, minimal, or balanced."
+  }
 }
 
 variable "grafana_cloud_instance_id" {

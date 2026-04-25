@@ -42,6 +42,30 @@ variable "deployment_preset" {
   }
 }
 
+variable "vps_preset" {
+  description = "Sizing preset for the prod single-VPS module."
+  type        = string
+  default     = "standard"
+}
+
+variable "cloudrun_preset" {
+  description = "Sizing preset for the prod Cloud Run API module."
+  type        = string
+  default     = "standard"
+}
+
+variable "artifact_registry_preset" {
+  description = "Retention preset for prod Artifact Registry repositories."
+  type        = string
+  default     = "standard"
+}
+
+variable "secret_manager_preset" {
+  description = "Secret Manager footprint preset for prod runtime secret wiring."
+  type        = string
+  default     = "standard"
+}
+
 variable "frontend_public_url" {
   description = "Optional externally managed frontend URL for prod presets that do not provision the frontend here."
   type        = string
@@ -187,6 +211,18 @@ variable "vps_boot_disk_size_gb" {
   default     = 30
 }
 
+variable "vps_boot_disk_type" {
+  description = "Boot disk type used by the prod single-vps preset."
+  type        = string
+  default     = "pd-balanced"
+}
+
+variable "vps_use_static_public_ip" {
+  description = "Whether the prod single-vps preset should reserve a static public IPv4 address."
+  type        = bool
+  default     = true
+}
+
 variable "vps_allow_public_source_ranges" {
   description = "CIDR ranges allowed to reach the public frontend and backend ports on the prod single VPS."
   type        = set(string)
@@ -256,6 +292,15 @@ variable "api_allow_unauthenticated" {
   description = "Whether the Cloud Run API service grants allUsers invoker."
   type        = bool
   default     = false
+}
+
+variable "api_container_limits" {
+  description = "Container resource limits for the prod Cloud Run API."
+  type        = map(string)
+  default = {
+    cpu    = "1"
+    memory = "512Mi"
+  }
 }
 
 variable "telemetry_profile" {

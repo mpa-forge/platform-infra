@@ -26,13 +26,14 @@ The Cloud Run service receives the backend API startup contract:
 - `OTEL_EXPORTER_OTLP_ENDPOINT`
 - `GRAFANA_CLOUD_INSTANCE_ID`
 - `DB_PASSWORD`
-- `GRAFANA_OTLP_INGEST_TOKEN`
+- `GRAFANA_OTLP_INGEST_TOKEN` when telemetry is enabled
 
-`DB_PASSWORD` and the Grafana ingest token are injected from Secret Manager.
+`DB_PASSWORD` is always injected from Secret Manager. The Grafana ingest token
+is injected only when telemetry is enabled by the selected secret-manager
+preset.
 The module grants the runtime service account
 `roles/secretmanager.secretAccessor` only for secret env vars listed in
-`runtime_secret_access_env_names` (default:
-`DB_PASSWORD`,`GRAFANA_OTLP_INGEST_TOKEN`). This keeps IAM grants explicit and
+`runtime_secret_access_env_names`. This keeps IAM grants explicit and
 least-privilege even if additional secret env vars are added later.
 
 The module also exports `runtime_secret_access_contract` so environment outputs
