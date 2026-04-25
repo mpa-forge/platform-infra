@@ -151,12 +151,9 @@ variable "secret_env" {
 
   validation {
     condition = !var.enabled || alltrue([
-      for name in [
-        "DB_PASSWORD",
-        "GRAFANA_OTLP_INGEST_TOKEN"
-      ] : contains(keys(var.secret_env), name)
+      for name in var.required_secret_env_names : contains(keys(var.secret_env), name)
     ])
-    error_message = "secret_env must include DB_PASSWORD and GRAFANA_OTLP_INGEST_TOKEN when enabled."
+    error_message = "secret_env must include every required secret env name when enabled."
   }
 
   validation {
@@ -166,6 +163,12 @@ variable "secret_env" {
     ])
     error_message = "secret_env entries must use non-empty env var names, secret names, and versions."
   }
+}
+
+variable "required_secret_env_names" {
+  description = "Secret env var names that must be present when the Cloud Run service is enabled."
+  type        = set(string)
+  default     = ["DB_PASSWORD", "GRAFANA_OTLP_INGEST_TOKEN"]
 }
 
 variable "runtime_secret_access_env_names" {
@@ -178,12 +181,9 @@ variable "runtime_secret_access_env_names" {
 
   validation {
     condition = !var.enabled || alltrue([
-      for name in [
-        "DB_PASSWORD",
-        "GRAFANA_OTLP_INGEST_TOKEN"
-      ] : contains(var.runtime_secret_access_env_names, name)
+      for name in var.required_secret_env_names : contains(var.runtime_secret_access_env_names, name)
     ])
-    error_message = "runtime_secret_access_env_names must include DB_PASSWORD and GRAFANA_OTLP_INGEST_TOKEN when enabled."
+    error_message = "runtime_secret_access_env_names must include each required secret env name when enabled."
   }
 
   validation {

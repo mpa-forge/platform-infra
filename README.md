@@ -72,7 +72,7 @@ Terraform workspaces for environment switching.
 Each root now selects a deployment preset instead of hand-toggling individual
 modules. The current checked-in defaults are:
 
-- `rc`: `single-vps`
+- `rc`: `cheap-single-vps`
 - `prod`: `cloudrun-cloudsql`
 
 Set `deployment_enabled=true` when you want the selected preset to create
@@ -112,6 +112,7 @@ that contains a write-capable dashboard provisioning token.
 See `docs/terraform-file-guide.md` for a file-by-file explanation of the
 Terraform layout.
 See `docs/deployment-presets.md` for the preset catalog and activation model.
+See `docs/module-cost-presets.md` for mix-and-match per-module cost tuning.
 See `docs/terraform-remote-state.md` for the state project, bucket, IAM, and
 operator workflow.
 See `docs/cloud-run-api-runtime.md` for the Phase 5 Cloud Run API runtime

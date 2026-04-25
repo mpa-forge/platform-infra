@@ -36,7 +36,7 @@ output "runtime_secret_access_contract" {
   description = "Least-privilege runtime secret IAM contract for Cloud Run API secret delivery."
   value = {
     role                    = "roles/secretmanager.secretAccessor"
-    required_secret_env     = ["DB_PASSWORD", "GRAFANA_OTLP_INGEST_TOKEN"]
+    required_secret_env     = sort(tolist(var.required_secret_env_names))
     configured_secret_env   = sort(keys(var.secret_env))
     iam_bound_secret_env    = sort(keys(local.runtime_secret_access))
     iam_bound_secret_ids    = sort(distinct([for contract in values(local.runtime_secret_access) : contract.secret]))

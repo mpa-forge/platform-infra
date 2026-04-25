@@ -9,7 +9,7 @@ locals {
 }
 
 resource "google_compute_address" "public" {
-  count = var.enabled ? 1 : 0
+  count = var.enabled && var.use_static_public_ip ? 1 : 0
 
   project = var.project_id
   region  = var.region
@@ -73,7 +73,7 @@ resource "google_compute_instance" "this" {
     initialize_params {
       image = var.boot_disk_image
       size  = var.boot_disk_size_gb
-      type  = "pd-balanced"
+      type  = var.boot_disk_type
     }
   }
 
@@ -82,7 +82,7 @@ resource "google_compute_instance" "this" {
     subnetwork = var.subnetwork_self_link
 
     access_config {
-      nat_ip = google_compute_address.public[0].address
+      nat_ip = var.use_static_public_ip ? google_compute_address.public[0].address : null
     }
   }
 

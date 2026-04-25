@@ -26,20 +26,51 @@ variable "deployment_enabled" {
   default     = false
 }
 
+variable "global_preset" {
+  description = "Optional top-level preset bundle for prod."
+  type        = string
+  default     = null
+}
+
 variable "deployment_preset" {
   description = "Deployment preset that selects the runtime topology for prod."
   type        = string
-  default     = "cloudrun-cloudsql"
+  default     = "inherit"
 
   validation {
     condition = contains([
+      "inherit",
       "single-vps",
       "cloudrun-cloudsql",
       "cloudrun-cdn-cloudsql",
       "gke-cloudsql",
     ], var.deployment_preset)
-    error_message = "deployment_preset must be one of single-vps, cloudrun-cloudsql, cloudrun-cdn-cloudsql, or gke-cloudsql."
+    error_message = "deployment_preset must be one of inherit, single-vps, cloudrun-cloudsql, cloudrun-cdn-cloudsql, or gke-cloudsql."
   }
+}
+
+variable "vps_preset" {
+  description = "Sizing preset for the prod single-VPS module."
+  type        = string
+  default     = "inherit"
+}
+
+variable "cloudrun_preset" {
+  description = "Sizing preset for the prod Cloud Run API module."
+  type        = string
+  default     = "inherit"
+}
+
+variable "artifact_registry_preset" {
+  description = "Retention preset for prod Artifact Registry repositories."
+  type        = string
+  default     = "inherit"
+}
+
+variable "secret_manager_preset" {
+  description = "Secret Manager footprint preset for prod runtime secret wiring."
+  type        = string
+  default     = "inherit"
 }
 
 variable "frontend_public_url" {
@@ -187,6 +218,18 @@ variable "vps_boot_disk_size_gb" {
   default     = 30
 }
 
+variable "vps_boot_disk_type" {
+  description = "Boot disk type used by the prod single-vps preset."
+  type        = string
+  default     = "pd-balanced"
+}
+
+variable "vps_use_static_public_ip" {
+  description = "Whether the prod single-vps preset should reserve a static public IPv4 address."
+  type        = bool
+  default     = true
+}
+
 variable "vps_allow_public_source_ranges" {
   description = "CIDR ranges allowed to reach the public frontend and backend ports on the prod single VPS."
   type        = set(string)
@@ -226,11 +269,11 @@ variable "vps_startup_script" {
 variable "cloudsql_profile" {
   description = "Named Cloud SQL cost and durability profile: super_cheap, cheap_dev, rc, or prod."
   type        = string
-  default     = "super_cheap"
+  default     = "inherit"
 
   validation {
-    condition     = contains(["super_cheap", "cheap_dev", "rc", "prod"], var.cloudsql_profile)
-    error_message = "cloudsql_profile must be one of super_cheap, cheap_dev, rc, or prod."
+    condition     = contains(["inherit", "super_cheap", "cheap_dev", "rc", "prod"], var.cloudsql_profile)
+    error_message = "cloudsql_profile must be one of inherit, super_cheap, cheap_dev, rc, or prod."
   }
 }
 
@@ -256,6 +299,15 @@ variable "api_allow_unauthenticated" {
   description = "Whether the Cloud Run API service grants allUsers invoker."
   type        = bool
   default     = false
+}
+
+variable "api_container_limits" {
+  description = "Container resource limits for the prod Cloud Run API."
+  type        = map(string)
+  default = {
+    cpu    = "1"
+    memory = "512Mi"
+  }
 }
 
 variable "telemetry_profile" {

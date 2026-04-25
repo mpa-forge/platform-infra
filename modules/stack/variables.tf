@@ -25,18 +25,84 @@ variable "deployment_enabled" {
   default     = false
 }
 
+variable "global_preset" {
+  description = "Optional top-level preset bundle that selects topology and per-module cost defaults."
+  type        = string
+  default     = null
+
+  validation {
+    condition = var.global_preset == null || contains([
+      "single-vps",
+      "cheap-single-vps",
+      "cloudrun-cloudsql",
+      "cheap-cloudrun-cloudsql",
+      "cloudrun-cdn-cloudsql",
+      "cheap-cloudrun-cdn-cloudsql",
+      "gke-cloudsql",
+      "cheap-gke-cloudsql",
+    ], var.global_preset)
+    error_message = "global_preset must be null or one of single-vps, cheap-single-vps, cloudrun-cloudsql, cheap-cloudrun-cloudsql, cloudrun-cdn-cloudsql, cheap-cloudrun-cdn-cloudsql, gke-cloudsql, or cheap-gke-cloudsql."
+  }
+}
+
 variable "deployment_preset" {
   description = "Deployment preset that selects the runtime topology for this environment."
   type        = string
+  default     = "inherit"
 
   validation {
     condition = contains([
+      "inherit",
       "single-vps",
       "cloudrun-cloudsql",
       "cloudrun-cdn-cloudsql",
       "gke-cloudsql",
     ], var.deployment_preset)
-    error_message = "deployment_preset must be one of single-vps, cloudrun-cloudsql, cloudrun-cdn-cloudsql, or gke-cloudsql."
+    error_message = "deployment_preset must be one of inherit, single-vps, cloudrun-cloudsql, cloudrun-cdn-cloudsql, or gke-cloudsql."
+  }
+}
+
+variable "vps_preset" {
+  description = "Sizing preset for the single-VPS module."
+  type        = string
+  default     = "inherit"
+
+  validation {
+    condition     = contains(["inherit", "standard", "cheap"], var.vps_preset)
+    error_message = "vps_preset must be one of inherit, standard, or cheap."
+  }
+}
+
+variable "cloudrun_preset" {
+  description = "Sizing preset for the Cloud Run API module."
+  type        = string
+  default     = "inherit"
+
+  validation {
+    condition     = contains(["inherit", "standard", "cheap"], var.cloudrun_preset)
+    error_message = "cloudrun_preset must be one of inherit, standard, or cheap."
+  }
+}
+
+variable "artifact_registry_preset" {
+  description = "Retention preset for Artifact Registry repositories."
+  type        = string
+  default     = "inherit"
+
+  validation {
+    condition     = contains(["inherit", "standard", "cheap"], var.artifact_registry_preset)
+    error_message = "artifact_registry_preset must be one of inherit, standard, or cheap."
+  }
+}
+
+variable "secret_manager_preset" {
+  description = "Secret Manager footprint preset for runtime secret wiring."
+  type        = string
+  default     = "inherit"
+
+  validation {
+    condition     = contains(["inherit", "standard", "cheap"], var.secret_manager_preset)
+    error_message = "secret_manager_preset must be one of inherit, standard, or cheap."
   }
 }
 
@@ -193,6 +259,18 @@ variable "vps_boot_disk_size_gb" {
   }
 }
 
+variable "vps_boot_disk_type" {
+  description = "Boot disk type used by the single-vps preset."
+  type        = string
+  default     = "pd-balanced"
+}
+
+variable "vps_use_static_public_ip" {
+  description = "Whether the single-vps preset should reserve a static public IPv4 address."
+  type        = bool
+  default     = true
+}
+
 variable "vps_allow_public_source_ranges" {
   description = "CIDR ranges allowed to reach the public frontend and backend ports on the single VPS."
   type        = set(string)
@@ -247,11 +325,11 @@ variable "vps_startup_script" {
 variable "cloudsql_profile" {
   description = "Named Cloud SQL cost and durability profile: super_cheap, cheap_dev, rc, or prod."
   type        = string
-  default     = "super_cheap"
+  default     = "inherit"
 
   validation {
-    condition     = contains(["super_cheap", "cheap_dev", "rc", "prod"], var.cloudsql_profile)
-    error_message = "cloudsql_profile must be one of super_cheap, cheap_dev, rc, or prod."
+    condition     = contains(["inherit", "super_cheap", "cheap_dev", "rc", "prod"], var.cloudsql_profile)
+    error_message = "cloudsql_profile must be one of inherit, super_cheap, cheap_dev, rc, or prod."
   }
 }
 
@@ -277,6 +355,15 @@ variable "api_allow_unauthenticated" {
   description = "Whether the Cloud Run API service grants allUsers invoker."
   type        = bool
   default     = false
+}
+
+variable "api_container_limits" {
+  description = "Container resource limits for the Cloud Run API service."
+  type        = map(string)
+  default = {
+    cpu    = "1"
+    memory = "512Mi"
+  }
 }
 
 variable "telemetry_profile" {

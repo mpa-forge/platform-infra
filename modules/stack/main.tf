@@ -7,7 +7,7 @@ locals {
     region     = var.region
   }
 
-  preset_catalog = {
+  deployment_preset_catalog = {
     "single-vps" = {
       frontend_runtime = "vps"
       backend_runtime  = "vps"
@@ -70,7 +70,158 @@ locals {
     }
   }
 
-  stack_config = local.preset_catalog[var.deployment_preset]
+  global_preset_catalog = {
+    "single-vps" = {
+      deployment_preset        = "single-vps"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "super_cheap"
+    }
+    "cheap-single-vps" = {
+      deployment_preset        = "single-vps"
+      vps_preset               = "cheap"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "super_cheap"
+    }
+    "cloudrun-cloudsql" = {
+      deployment_preset        = "cloudrun-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "cheap_dev"
+    }
+    "cheap-cloudrun-cloudsql" = {
+      deployment_preset        = "cloudrun-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "cheap"
+      artifact_registry_preset = "cheap"
+      secret_manager_preset    = "cheap"
+      cloudsql_profile         = "super_cheap"
+    }
+    "cloudrun-cdn-cloudsql" = {
+      deployment_preset        = "cloudrun-cdn-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "cheap_dev"
+    }
+    "cheap-cloudrun-cdn-cloudsql" = {
+      deployment_preset        = "cloudrun-cdn-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "cheap"
+      artifact_registry_preset = "cheap"
+      secret_manager_preset    = "cheap"
+      cloudsql_profile         = "super_cheap"
+    }
+    "gke-cloudsql" = {
+      deployment_preset        = "gke-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "cheap_dev"
+    }
+    "cheap-gke-cloudsql" = {
+      deployment_preset        = "gke-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "cheap"
+      artifact_registry_preset = "cheap"
+      secret_manager_preset    = "cheap"
+      cloudsql_profile         = "super_cheap"
+    }
+  }
+  selected_global_preset = var.global_preset == null ? null : local.global_preset_catalog[var.global_preset]
+  effective_deployment_preset = coalesce(
+    var.deployment_preset == "inherit" ? null : var.deployment_preset,
+    try(local.selected_global_preset.deployment_preset, null)
+  )
+  effective_vps_preset = coalesce(
+    var.vps_preset == "inherit" ? null : var.vps_preset,
+    try(local.selected_global_preset.vps_preset, null),
+    "standard"
+  )
+  effective_cloudrun_preset = coalesce(
+    var.cloudrun_preset == "inherit" ? null : var.cloudrun_preset,
+    try(local.selected_global_preset.cloudrun_preset, null),
+    "standard"
+  )
+  effective_artifact_registry_preset = coalesce(
+    var.artifact_registry_preset == "inherit" ? null : var.artifact_registry_preset,
+    try(local.selected_global_preset.artifact_registry_preset, null),
+    "standard"
+  )
+  effective_secret_manager_preset = coalesce(
+    var.secret_manager_preset == "inherit" ? null : var.secret_manager_preset,
+    try(local.selected_global_preset.secret_manager_preset, null),
+    "standard"
+  )
+  effective_cloudsql_profile = coalesce(
+    var.cloudsql_profile == "inherit" ? null : var.cloudsql_profile,
+    try(local.selected_global_preset.cloudsql_profile, null),
+    "super_cheap"
+  )
+  stack_config = local.deployment_preset_catalog[local.effective_deployment_preset]
+  vps_preset_catalog = {
+    standard = {
+      machine_type         = var.vps_machine_type
+      boot_disk_size_gb    = var.vps_boot_disk_size_gb
+      boot_disk_type       = var.vps_boot_disk_type
+      use_static_public_ip = var.vps_use_static_public_ip
+    }
+    cheap = {
+      machine_type         = "e2-small"
+      boot_disk_size_gb    = 20
+      boot_disk_type       = "pd-standard"
+      use_static_public_ip = false
+    }
+  }
+  cloudrun_preset_catalog = {
+    standard = {
+      min_instance_count               = var.api_min_instance_count
+      max_instance_count               = var.api_max_instance_count
+      max_instance_request_concurrency = var.api_max_instance_request_concurrency
+      container_limits                 = var.api_container_limits
+    }
+    cheap = {
+      min_instance_count               = 0
+      max_instance_count               = 2
+      max_instance_request_concurrency = 20
+      container_limits = {
+        cpu    = "1"
+        memory = "256Mi"
+      }
+    }
+  }
+  artifact_registry_preset_catalog = {
+    standard = {
+      untagged_retention   = var.gar_untagged_retention
+      sha_tagged_retention = var.gar_sha_tagged_retention
+      sha_keep_count       = var.gar_sha_keep_count
+    }
+    cheap = {
+      untagged_retention   = "86400s"
+      sha_tagged_retention = "604800s"
+      sha_keep_count       = 5
+    }
+  }
+  secret_manager_preset_catalog = {
+    standard = {
+      telemetry_profile = var.telemetry_profile
+    }
+    cheap = {
+      telemetry_profile = "off"
+    }
+  }
+  selected_vps_preset               = local.vps_preset_catalog[local.effective_vps_preset]
+  selected_cloudrun_preset          = local.cloudrun_preset_catalog[local.effective_cloudrun_preset]
+  selected_artifact_registry_preset = local.artifact_registry_preset_catalog[local.effective_artifact_registry_preset]
+  selected_secret_manager_preset    = local.secret_manager_preset_catalog[local.effective_secret_manager_preset]
   module_activation = {
     for module_name, enabled in local.stack_config.module_activation :
     module_name => var.deployment_enabled && enabled
@@ -126,8 +277,10 @@ locals {
     local.stack_config.backend_runtime == "vps" ? "manual-vps" : null,
   ]))
 
+  telemetry_enabled = module.observability_support.telemetry_enabled
+
   runtime_secret_catalog = merge(
-    {
+    local.telemetry_enabled ? {
       grafana_otlp_ingest_token = {
         secret_id         = module.observability_support.grafana_token_secret_name
         cloud_run_env_var = local.stack_config.backend_runtime == "cloud_run" ? "GRAFANA_OTLP_INGEST_TOKEN" : null
@@ -145,6 +298,8 @@ locals {
           phase_owner = "deployment-presets"
         }
       }
+    } : {},
+    {
       api_db_password = {
         secret_id         = local.db_password_secret_id
         cloud_run_env_var = local.stack_config.backend_runtime == "cloud_run" ? "DB_PASSWORD" : null
@@ -262,14 +417,14 @@ locals {
     }
   }
 
-  cloudsql_profile = local.cloudsql_profiles[var.cloudsql_profile]
+  cloudsql_profile = local.cloudsql_profiles[local.effective_cloudsql_profile]
 
   gar_cleanup_policies = {
     delete-untagged = {
       action = "DELETE"
       condition = {
         tag_state  = "UNTAGGED"
-        older_than = var.gar_untagged_retention
+        older_than = local.selected_artifact_registry_preset.untagged_retention
       }
     }
     delete-old-sha = {
@@ -277,13 +432,13 @@ locals {
       condition = {
         tag_state    = "TAGGED"
         tag_prefixes = ["sha-"]
-        older_than   = var.gar_sha_tagged_retention
+        older_than   = local.selected_artifact_registry_preset.sha_tagged_retention
       }
     }
     keep-recent-sha = {
       action = "KEEP"
       most_recent_versions = {
-        keep_count = var.gar_sha_keep_count
+        keep_count = local.selected_artifact_registry_preset.sha_keep_count
       }
     }
   }
@@ -332,7 +487,7 @@ locals {
   vps_metadata = merge(
     {
       PLATFORM_ENV      = var.environment
-      DEPLOYMENT_PRESET = var.deployment_preset
+      DEPLOYMENT_PRESET = local.effective_deployment_preset
       FRONTEND_PORT     = tostring(var.vps_frontend_port)
       BACKEND_PORT      = tostring(var.vps_backend_port)
       DATABASE_PORT     = tostring(var.vps_database_port)
@@ -431,7 +586,7 @@ locals {
     port                      = local.stack_config.database_runtime == "cloudsql" ? null : module.vps_stack.database_port
     connection_name           = module.cloudsql.instance_connection_name
     connection_strategy       = local.stack_config.database_runtime == "cloudsql" ? "cloudsql-socket" : "localhost-tcp"
-    profile                   = local.stack_config.database_runtime == "cloudsql" ? var.cloudsql_profile : "single-vps"
+    profile                   = local.stack_config.database_runtime == "cloudsql" ? local.effective_cloudsql_profile : "single-vps"
     edition                   = module.cloudsql.edition
     tier                      = module.cloudsql.tier
     database_name             = local.stack_config.database_runtime == "cloudsql" ? module.cloudsql.database_name : local.db_name
@@ -441,21 +596,30 @@ locals {
   }
 
   operational_contract = {
-    active_preset      = var.deployment_preset
+    active_preset      = local.effective_deployment_preset
+    global_preset      = var.global_preset
     deployment_enabled = var.deployment_enabled
     module_activation  = local.module_activation
+    module_presets = {
+      vps               = local.effective_vps_preset
+      cloudrun_api      = local.effective_cloudrun_preset
+      artifact_registry = local.effective_artifact_registry_preset
+      secret_manager    = local.effective_secret_manager_preset
+      cloudsql          = local.effective_cloudsql_profile
+    }
     image_uri_prefixes = module.gar.image_uri_prefixes
     artifact_registry = {
       repositories = module.gar.repository_ids
       uris         = module.gar.repository_uris
     }
     observability_mode = local.stack_config.observability
+    telemetry_enabled  = local.telemetry_enabled
     runtime_baseline   = "cloud_run"
     backend_runtime    = local.stack_config.backend_runtime
   }
 
   deployment_contract = {
-    active_preset        = var.deployment_preset
+    active_preset        = local.effective_deployment_preset
     deployment_enabled   = var.deployment_enabled
     frontend_contract    = local.frontend_contract
     backend_contract     = local.backend_contract
@@ -464,7 +628,7 @@ locals {
   }
 
   service_contracts = {
-    active_preset             = var.deployment_preset
+    active_preset             = local.effective_deployment_preset
     deployment_enabled        = var.deployment_enabled
     frontend_contract         = local.frontend_contract
     backend_contract          = local.backend_contract
@@ -515,11 +679,18 @@ resource "google_service_account" "ai_worker_runtime" {
   description  = "Runtime identity for the ${each.key} AI worker lane."
 }
 
+check "effective_deployment_preset_selected" {
+  assert {
+    condition     = local.effective_deployment_preset != null
+    error_message = "Select either global_preset or deployment_preset so the stack can determine the runtime topology."
+  }
+}
+
 module "observability_support" {
   source = "../../modules/observability_support"
 
   environment               = var.environment
-  telemetry_profile         = var.telemetry_profile
+  telemetry_profile         = local.selected_secret_manager_preset.telemetry_profile
   grafana_cloud_instance_id = var.grafana_cloud_instance_id
   direct_otlp_endpoint      = var.grafana_direct_otlp_endpoint
   collector_otlp_endpoint   = var.gke_collector_otlp_endpoint
@@ -608,11 +779,19 @@ module "cloudrun_api" {
       }
     }
   )
-  runtime_secret_access_env_names  = toset(["DB_PASSWORD", "GRAFANA_OTLP_INGEST_TOKEN"])
+  required_secret_env_names = toset(concat(
+    ["DB_PASSWORD"],
+    local.telemetry_enabled ? ["GRAFANA_OTLP_INGEST_TOKEN"] : []
+  ))
+  runtime_secret_access_env_names = toset(concat(
+    ["DB_PASSWORD"],
+    local.telemetry_enabled ? ["GRAFANA_OTLP_INGEST_TOKEN"] : []
+  ))
   container_port                   = var.api_container_port
-  min_instance_count               = var.api_min_instance_count
-  max_instance_count               = var.api_max_instance_count
-  max_instance_request_concurrency = var.api_max_instance_request_concurrency
+  min_instance_count               = local.selected_cloudrun_preset.min_instance_count
+  max_instance_count               = local.selected_cloudrun_preset.max_instance_count
+  max_instance_request_concurrency = local.selected_cloudrun_preset.max_instance_request_concurrency
+  container_limits                 = local.selected_cloudrun_preset.container_limits
   allow_unauthenticated            = var.api_allow_unauthenticated
   cloudsql_instance_connection_names = (
     module.cloudsql.instance_connection_name == null ? [] : [module.cloudsql.instance_connection_name]
@@ -636,30 +815,34 @@ module "gke" {
       google_service_account_id  = principal.account_id
       kubernetes_namespace       = principal.kubernetes_namespace
       kubernetes_service_account = principal.kubernetes_service_account
-      secret_ids = toset([
-        lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name),
-        lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id),
-      ])
+      secret_ids = toset(concat(
+        [lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id)],
+        local.telemetry_enabled ? [lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name)] : []
+      ))
       display_name = "GKE secret sync (${principal_key})"
       description  = "Workload Identity principal for ${principal.kubernetes_namespace}/${principal.kubernetes_service_account}."
     }
   }
-  eso_secret_mappings = {
-    grafana_otlp_ingest_token = {
-      secret_id              = lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name)
-      kubernetes_namespace   = var.gke_api_namespace
-      kubernetes_secret_name = "backend-api-runtime-secrets"
-      kubernetes_secret_key  = "GRAFANA_OTLP_INGEST_TOKEN"
-      version                = "latest"
+  eso_secret_mappings = merge(
+    local.telemetry_enabled ? {
+      grafana_otlp_ingest_token = {
+        secret_id              = lookup(module.secrets.secret_ids, "grafana_otlp_ingest_token", module.observability_support.grafana_token_secret_name)
+        kubernetes_namespace   = var.gke_api_namespace
+        kubernetes_secret_name = "backend-api-runtime-secrets"
+        kubernetes_secret_key  = "GRAFANA_OTLP_INGEST_TOKEN"
+        version                = "latest"
+      }
+    } : {},
+    {
+      api_db_password = {
+        secret_id              = lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id)
+        kubernetes_namespace   = var.gke_api_namespace
+        kubernetes_secret_name = "backend-api-runtime-secrets"
+        kubernetes_secret_key  = "DB_PASSWORD"
+        version                = "latest"
+      }
     }
-    api_db_password = {
-      secret_id              = lookup(module.secrets.secret_ids, "api_db_password", local.db_password_secret_id)
-      kubernetes_namespace   = var.gke_api_namespace
-      kubernetes_secret_name = "backend-api-runtime-secrets"
-      kubernetes_secret_key  = "DB_PASSWORD"
-      version                = "latest"
-    }
-  }
+  )
 }
 
 module "vps_stack" {
@@ -673,9 +856,11 @@ module "vps_stack" {
   service_account_id   = local.vps_service_account_id
   network_self_link    = module.network.network_self_link
   subnetwork_self_link = module.network.subnetwork_self_link
-  machine_type         = var.vps_machine_type
+  machine_type         = local.selected_vps_preset.machine_type
   boot_disk_image      = var.vps_boot_disk_image
-  boot_disk_size_gb    = var.vps_boot_disk_size_gb
+  boot_disk_size_gb    = local.selected_vps_preset.boot_disk_size_gb
+  boot_disk_type       = local.selected_vps_preset.boot_disk_type
+  use_static_public_ip = local.selected_vps_preset.use_static_public_ip
   public_source_ranges = var.vps_allow_public_source_ranges
   ssh_source_ranges    = var.vps_allow_ssh_source_ranges
   frontend_port        = var.vps_frontend_port

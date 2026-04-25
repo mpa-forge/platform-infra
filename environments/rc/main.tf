@@ -6,7 +6,12 @@ module "stack" {
   project_id                                = var.project_id
   region                                    = var.region
   deployment_enabled                        = var.deployment_enabled
+  global_preset                             = var.global_preset
   deployment_preset                         = var.deployment_preset
+  vps_preset                                = var.vps_preset
+  cloudrun_preset                           = var.cloudrun_preset
+  artifact_registry_preset                  = var.artifact_registry_preset
+  secret_manager_preset                     = var.secret_manager_preset
   frontend_public_url                       = var.frontend_public_url
   ai_worker_lanes                           = var.ai_worker_lanes
   network_name                              = var.network_name
@@ -30,6 +35,8 @@ module "stack" {
   vps_machine_type                          = var.vps_machine_type
   vps_boot_disk_image                       = var.vps_boot_disk_image
   vps_boot_disk_size_gb                     = var.vps_boot_disk_size_gb
+  vps_boot_disk_type                        = var.vps_boot_disk_type
+  vps_use_static_public_ip                  = var.vps_use_static_public_ip
   vps_allow_public_source_ranges            = var.vps_allow_public_source_ranges
   vps_allow_ssh_source_ranges               = var.vps_allow_ssh_source_ranges
   vps_frontend_port                         = var.vps_frontend_port
@@ -41,6 +48,7 @@ module "stack" {
   api_max_instance_count                    = var.api_max_instance_count
   api_max_instance_request_concurrency      = var.api_max_instance_request_concurrency
   api_allow_unauthenticated                 = var.api_allow_unauthenticated
+  api_container_limits                      = var.api_container_limits
   telemetry_profile                         = var.telemetry_profile
   grafana_cloud_instance_id                 = var.grafana_cloud_instance_id
   grafana_direct_otlp_endpoint              = var.grafana_direct_otlp_endpoint
