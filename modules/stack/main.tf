@@ -7,7 +7,7 @@ locals {
     region     = var.region
   }
 
-  preset_catalog = {
+  deployment_preset_catalog = {
     "single-vps" = {
       frontend_runtime = "vps"
       backend_runtime  = "vps"
@@ -70,8 +70,104 @@ locals {
     }
   }
 
-  stack_config = local.preset_catalog[var.deployment_preset]
-  vps_presets = {
+  global_preset_catalog = {
+    "single-vps" = {
+      deployment_preset        = "single-vps"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "super_cheap"
+    }
+    "cheap-single-vps" = {
+      deployment_preset        = "single-vps"
+      vps_preset               = "cheap"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "super_cheap"
+    }
+    "cloudrun-cloudsql" = {
+      deployment_preset        = "cloudrun-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "cheap_dev"
+    }
+    "cheap-cloudrun-cloudsql" = {
+      deployment_preset        = "cloudrun-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "cheap"
+      artifact_registry_preset = "cheap"
+      secret_manager_preset    = "cheap"
+      cloudsql_profile         = "super_cheap"
+    }
+    "cloudrun-cdn-cloudsql" = {
+      deployment_preset        = "cloudrun-cdn-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "cheap_dev"
+    }
+    "cheap-cloudrun-cdn-cloudsql" = {
+      deployment_preset        = "cloudrun-cdn-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "cheap"
+      artifact_registry_preset = "cheap"
+      secret_manager_preset    = "cheap"
+      cloudsql_profile         = "super_cheap"
+    }
+    "gke-cloudsql" = {
+      deployment_preset        = "gke-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "standard"
+      artifact_registry_preset = "standard"
+      secret_manager_preset    = "standard"
+      cloudsql_profile         = "cheap_dev"
+    }
+    "cheap-gke-cloudsql" = {
+      deployment_preset        = "gke-cloudsql"
+      vps_preset               = "standard"
+      cloudrun_preset          = "cheap"
+      artifact_registry_preset = "cheap"
+      secret_manager_preset    = "cheap"
+      cloudsql_profile         = "super_cheap"
+    }
+  }
+  selected_global_preset = var.global_preset == null ? null : local.global_preset_catalog[var.global_preset]
+  effective_deployment_preset = coalesce(
+    var.deployment_preset == "inherit" ? null : var.deployment_preset,
+    try(local.selected_global_preset.deployment_preset, null)
+  )
+  effective_vps_preset = coalesce(
+    var.vps_preset == "inherit" ? null : var.vps_preset,
+    try(local.selected_global_preset.vps_preset, null),
+    "standard"
+  )
+  effective_cloudrun_preset = coalesce(
+    var.cloudrun_preset == "inherit" ? null : var.cloudrun_preset,
+    try(local.selected_global_preset.cloudrun_preset, null),
+    "standard"
+  )
+  effective_artifact_registry_preset = coalesce(
+    var.artifact_registry_preset == "inherit" ? null : var.artifact_registry_preset,
+    try(local.selected_global_preset.artifact_registry_preset, null),
+    "standard"
+  )
+  effective_secret_manager_preset = coalesce(
+    var.secret_manager_preset == "inherit" ? null : var.secret_manager_preset,
+    try(local.selected_global_preset.secret_manager_preset, null),
+    "standard"
+  )
+  effective_cloudsql_profile = coalesce(
+    var.cloudsql_profile == "inherit" ? null : var.cloudsql_profile,
+    try(local.selected_global_preset.cloudsql_profile, null),
+    "super_cheap"
+  )
+  stack_config = local.deployment_preset_catalog[local.effective_deployment_preset]
+  vps_preset_catalog = {
     standard = {
       machine_type         = var.vps_machine_type
       boot_disk_size_gb    = var.vps_boot_disk_size_gb
@@ -85,7 +181,7 @@ locals {
       use_static_public_ip = false
     }
   }
-  cloudrun_presets = {
+  cloudrun_preset_catalog = {
     standard = {
       min_instance_count               = var.api_min_instance_count
       max_instance_count               = var.api_max_instance_count
@@ -102,7 +198,7 @@ locals {
       }
     }
   }
-  artifact_registry_presets = {
+  artifact_registry_preset_catalog = {
     standard = {
       untagged_retention   = var.gar_untagged_retention
       sha_tagged_retention = var.gar_sha_tagged_retention
@@ -114,7 +210,7 @@ locals {
       sha_keep_count       = 5
     }
   }
-  secret_manager_presets = {
+  secret_manager_preset_catalog = {
     standard = {
       telemetry_profile = var.telemetry_profile
     }
@@ -122,10 +218,10 @@ locals {
       telemetry_profile = "off"
     }
   }
-  selected_vps_preset               = local.vps_presets[var.vps_preset]
-  selected_cloudrun_preset          = local.cloudrun_presets[var.cloudrun_preset]
-  selected_artifact_registry_preset = local.artifact_registry_presets[var.artifact_registry_preset]
-  selected_secret_manager_preset    = local.secret_manager_presets[var.secret_manager_preset]
+  selected_vps_preset               = local.vps_preset_catalog[local.effective_vps_preset]
+  selected_cloudrun_preset          = local.cloudrun_preset_catalog[local.effective_cloudrun_preset]
+  selected_artifact_registry_preset = local.artifact_registry_preset_catalog[local.effective_artifact_registry_preset]
+  selected_secret_manager_preset    = local.secret_manager_preset_catalog[local.effective_secret_manager_preset]
   module_activation = {
     for module_name, enabled in local.stack_config.module_activation :
     module_name => var.deployment_enabled && enabled
@@ -321,7 +417,7 @@ locals {
     }
   }
 
-  cloudsql_profile = local.cloudsql_profiles[var.cloudsql_profile]
+  cloudsql_profile = local.cloudsql_profiles[local.effective_cloudsql_profile]
 
   gar_cleanup_policies = {
     delete-untagged = {
@@ -391,7 +487,7 @@ locals {
   vps_metadata = merge(
     {
       PLATFORM_ENV      = var.environment
-      DEPLOYMENT_PRESET = var.deployment_preset
+      DEPLOYMENT_PRESET = local.effective_deployment_preset
       FRONTEND_PORT     = tostring(var.vps_frontend_port)
       BACKEND_PORT      = tostring(var.vps_backend_port)
       DATABASE_PORT     = tostring(var.vps_database_port)
@@ -490,7 +586,7 @@ locals {
     port                      = local.stack_config.database_runtime == "cloudsql" ? null : module.vps_stack.database_port
     connection_name           = module.cloudsql.instance_connection_name
     connection_strategy       = local.stack_config.database_runtime == "cloudsql" ? "cloudsql-socket" : "localhost-tcp"
-    profile                   = local.stack_config.database_runtime == "cloudsql" ? var.cloudsql_profile : "single-vps"
+    profile                   = local.stack_config.database_runtime == "cloudsql" ? local.effective_cloudsql_profile : "single-vps"
     edition                   = module.cloudsql.edition
     tier                      = module.cloudsql.tier
     database_name             = local.stack_config.database_runtime == "cloudsql" ? module.cloudsql.database_name : local.db_name
@@ -500,15 +596,16 @@ locals {
   }
 
   operational_contract = {
-    active_preset      = var.deployment_preset
+    active_preset      = local.effective_deployment_preset
+    global_preset      = var.global_preset
     deployment_enabled = var.deployment_enabled
     module_activation  = local.module_activation
     module_presets = {
-      vps               = var.vps_preset
-      cloudrun_api      = var.cloudrun_preset
-      artifact_registry = var.artifact_registry_preset
-      secret_manager    = var.secret_manager_preset
-      cloudsql          = var.cloudsql_profile
+      vps               = local.effective_vps_preset
+      cloudrun_api      = local.effective_cloudrun_preset
+      artifact_registry = local.effective_artifact_registry_preset
+      secret_manager    = local.effective_secret_manager_preset
+      cloudsql          = local.effective_cloudsql_profile
     }
     image_uri_prefixes = module.gar.image_uri_prefixes
     artifact_registry = {
@@ -522,7 +619,7 @@ locals {
   }
 
   deployment_contract = {
-    active_preset        = var.deployment_preset
+    active_preset        = local.effective_deployment_preset
     deployment_enabled   = var.deployment_enabled
     frontend_contract    = local.frontend_contract
     backend_contract     = local.backend_contract
@@ -531,7 +628,7 @@ locals {
   }
 
   service_contracts = {
-    active_preset             = var.deployment_preset
+    active_preset             = local.effective_deployment_preset
     deployment_enabled        = var.deployment_enabled
     frontend_contract         = local.frontend_contract
     backend_contract          = local.backend_contract
@@ -580,6 +677,13 @@ resource "google_service_account" "ai_worker_runtime" {
   account_id   = each.value.service_account_id
   display_name = "AI worker runtime (${each.key})"
   description  = "Runtime identity for the ${each.key} AI worker lane."
+}
+
+check "effective_deployment_preset_selected" {
+  assert {
+    condition     = local.effective_deployment_preset != null
+    error_message = "Select either global_preset or deployment_preset so the stack can determine the runtime topology."
+  }
 }
 
 module "observability_support" {

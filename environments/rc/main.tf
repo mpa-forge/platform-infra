@@ -6,6 +6,7 @@ module "stack" {
   project_id                                = var.project_id
   region                                    = var.region
   deployment_enabled                        = var.deployment_enabled
+  global_preset                             = var.global_preset
   deployment_preset                         = var.deployment_preset
   vps_preset                                = var.vps_preset
   cloudrun_preset                           = var.cloudrun_preset

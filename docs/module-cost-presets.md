@@ -3,6 +3,51 @@
 `platform-infra` keeps runtime topology selection in `deployment_preset`, and
 now lets operators tune cost posture independently per module.
 
+An optional `global_preset` can now set all of those defaults in one place.
+Lower-level settings still work as overrides, so you can start from a bundle
+and tweak only one module when needed.
+
+Naming convention:
+
+- variable: `<thing>_preset`
+- local catalog: `<thing>_preset_catalog`
+
+Examples:
+
+- `deployment_preset` -> `deployment_preset_catalog`
+- `vps_preset` -> `vps_preset_catalog`
+- `cloudrun_preset` -> `cloudrun_preset_catalog`
+- `artifact_registry_preset` -> `artifact_registry_preset_catalog`
+- `secret_manager_preset` -> `secret_manager_preset_catalog`
+- `global_preset` -> `global_preset_catalog`
+
+## Global Presets
+
+- `single-vps`
+- `cheap-single-vps`
+- `cloudrun-cloudsql`
+- `cheap-cloudrun-cloudsql`
+- `cloudrun-cdn-cloudsql`
+- `cheap-cloudrun-cdn-cloudsql`
+- `gke-cloudsql`
+- `cheap-gke-cloudsql`
+
+Example:
+
+```hcl
+global_preset = "cheap-cloudrun-cloudsql"
+```
+
+Example with one override:
+
+```hcl
+global_preset   = "cheap-cloudrun-cloudsql"
+cloudrun_preset = "standard"
+```
+
+Use `inherit` for the module preset inputs when you want them to continue
+following `global_preset`.
+
 ## Available Module Presets
 
 - `vps_preset`
@@ -55,6 +100,12 @@ cloudrun_preset           = "cheap"
 artifact_registry_preset  = "cheap"
 secret_manager_preset     = "cheap"
 cloudsql_profile          = "super_cheap"
+```
+
+The equivalent single-setting version is:
+
+```hcl
+global_preset = "cheap-cloudrun-cloudsql"
 ```
 
 ## Notes

@@ -26,44 +26,51 @@ variable "deployment_enabled" {
   default     = false
 }
 
+variable "global_preset" {
+  description = "Optional top-level preset bundle for RC."
+  type        = string
+  default     = null
+}
+
 variable "deployment_preset" {
   description = "Deployment preset that selects the runtime topology for RC."
   type        = string
-  default     = "single-vps"
+  default     = "inherit"
 
   validation {
     condition = contains([
+      "inherit",
       "single-vps",
       "cloudrun-cloudsql",
       "cloudrun-cdn-cloudsql",
       "gke-cloudsql",
     ], var.deployment_preset)
-    error_message = "deployment_preset must be one of single-vps, cloudrun-cloudsql, cloudrun-cdn-cloudsql, or gke-cloudsql."
+    error_message = "deployment_preset must be one of inherit, single-vps, cloudrun-cloudsql, cloudrun-cdn-cloudsql, or gke-cloudsql."
   }
 }
 
 variable "vps_preset" {
   description = "Sizing preset for the RC single-VPS module."
   type        = string
-  default     = "standard"
+  default     = "inherit"
 }
 
 variable "cloudrun_preset" {
   description = "Sizing preset for the RC Cloud Run API module."
   type        = string
-  default     = "standard"
+  default     = "inherit"
 }
 
 variable "artifact_registry_preset" {
   description = "Retention preset for RC Artifact Registry repositories."
   type        = string
-  default     = "standard"
+  default     = "inherit"
 }
 
 variable "secret_manager_preset" {
   description = "Secret Manager footprint preset for RC runtime secret wiring."
   type        = string
-  default     = "standard"
+  default     = "inherit"
 }
 
 variable "frontend_public_url" {
@@ -262,11 +269,11 @@ variable "vps_startup_script" {
 variable "cloudsql_profile" {
   description = "Named Cloud SQL cost and durability profile: super_cheap, cheap_dev, rc, or prod."
   type        = string
-  default     = "super_cheap"
+  default     = "inherit"
 
   validation {
-    condition     = contains(["super_cheap", "cheap_dev", "rc", "prod"], var.cloudsql_profile)
-    error_message = "cloudsql_profile must be one of super_cheap, cheap_dev, rc, or prod."
+    condition     = contains(["inherit", "super_cheap", "cheap_dev", "rc", "prod"], var.cloudsql_profile)
+    error_message = "cloudsql_profile must be one of inherit, super_cheap, cheap_dev, rc, or prod."
   }
 }
 

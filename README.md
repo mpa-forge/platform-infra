@@ -72,7 +72,7 @@ Terraform workspaces for environment switching.
 Each root now selects a deployment preset instead of hand-toggling individual
 modules. The current checked-in defaults are:
 
-- `rc`: `single-vps`
+- `rc`: `cheap-single-vps`
 - `prod`: `cloudrun-cloudsql`
 
 Set `deployment_enabled=true` when you want the selected preset to create
