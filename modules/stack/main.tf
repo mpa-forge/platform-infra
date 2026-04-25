@@ -343,36 +343,85 @@ locals {
     var.frontend_public_url == null ? {} : { FRONTEND_PUBLIC_URL = var.frontend_public_url }
   )
 
-  backend_runtime_contract = (
-    local.stack_config.backend_runtime == "cloud_run" ? module.cloudrun_api.runtime_contract :
-    local.stack_config.backend_runtime == "vps" ? module.vps_stack.runtime_contract :
-    {
-      runtime_path               = "gke"
-      cluster_name               = module.gke.cluster_name
-      cluster_endpoint           = module.gke.cluster_endpoint
-      workload_identity_principal = try(module.gke.workload_identity_principals["backend_api"], null)
-      eso_secret_mappings        = module.gke.eso_secret_mappings
-    }
+  vps_frontend_url = try(module.vps_stack.frontend_url, null)
+  vps_backend_url  = try(module.vps_stack.backend_url, null)
+  gke_backend_workload_identity_principal = try(
+    module.gke.workload_identity_principals["backend_api"],
+    null
   )
+  frontend_public_url = (
+    local.stack_config.frontend_runtime == "vps" ? local.vps_frontend_url : var.frontend_public_url
+  )
+  backend_service_url = (
+    local.stack_config.backend_runtime == "cloud_run" ? module.cloudrun_api.service_uri :
+    local.stack_config.backend_runtime == "vps" ? local.vps_backend_url :
+    null
+  )
+  backend_service_account_email = (
+    local.stack_config.backend_runtime == "cloud_run" ? module.cloudrun_api.service_account_email :
+    local.stack_config.backend_runtime == "vps" ? module.vps_stack.service_account_email :
+    try(local.gke_backend_workload_identity_principal.google_service_account_email, null)
+  )
+  backend_runtime_contract_base = {
+    runtime_path                       = local.api_runtime_path
+    ingress                            = null
+    allow_unauthenticated              = null
+    container_port                     = null
+    cloudsql_enabled                   = null
+    cloudsql_instance_connection_names = []
+    cloudsql_mount_path                = null
+    plain_env_names                    = []
+    secret_env_names                   = []
+    runtime_secret_access_env_names    = []
+    runtime_secret_access_secret_ids   = []
+    startup_probe_path                 = null
+    service_uri                        = null
+    zone                               = null
+    machine_type                       = null
+    public_ip                          = null
+    frontend_url                       = null
+    backend_url                        = null
+    database_host                      = null
+    database_port                      = null
+    startup_script_configured          = null
+    cluster_name                       = null
+    cluster_endpoint                   = null
+    workload_identity_principal        = null
+    eso_secret_mappings                = {}
+  }
+  backend_runtime_contracts = {
+    cloud_run = merge(
+      local.backend_runtime_contract_base,
+      module.cloudrun_api.runtime_contract
+    )
+    vps = merge(
+      local.backend_runtime_contract_base,
+      module.vps_stack.runtime_contract
+    )
+    gke = merge(
+      local.backend_runtime_contract_base,
+      {
+        cluster_name                = module.gke.cluster_name
+        cluster_endpoint            = module.gke.cluster_endpoint
+        workload_identity_principal = local.gke_backend_workload_identity_principal
+        eso_secret_mappings         = module.gke.eso_secret_mappings
+      }
+    )
+  }
+  backend_runtime_contract = local.backend_runtime_contracts[local.stack_config.backend_runtime]
 
   frontend_contract = {
     runtime_kind = local.stack_config.frontend_runtime
-    public_url = coalesce(
-      local.stack_config.frontend_runtime == "vps" ? module.vps_stack.frontend_url : null,
-      var.frontend_public_url
-    )
-    endpoint = coalesce(
-      local.stack_config.frontend_runtime == "vps" ? module.vps_stack.frontend_url : null,
-      var.frontend_public_url
-    )
-    managed = local.stack_config.frontend_runtime != "external"
+    public_url   = local.frontend_public_url
+    endpoint     = local.frontend_public_url
+    managed      = local.stack_config.frontend_runtime != "external"
   }
 
   backend_contract = {
     runtime_kind          = local.stack_config.backend_runtime
     service_name          = local.stack_config.backend_runtime == "cloud_run" ? module.cloudrun_api.service_name : local.stack_config.backend_runtime == "vps" ? module.vps_stack.instance_name : module.gke.cluster_name
-    service_url           = local.stack_config.backend_runtime == "cloud_run" ? module.cloudrun_api.service_uri : local.stack_config.backend_runtime == "vps" ? module.vps_stack.backend_url : null
-    service_account_email = local.stack_config.backend_runtime == "cloud_run" ? module.cloudrun_api.service_account_email : local.stack_config.backend_runtime == "vps" ? module.vps_stack.service_account_email : try(module.gke.workload_identity_principals["backend_api"].google_service_account_email, null)
+    service_url           = local.backend_service_url
+    service_account_email = local.backend_service_account_email
     runtime_contract      = local.backend_runtime_contract
   }
 
@@ -406,28 +455,28 @@ locals {
   }
 
   deployment_contract = {
-    active_preset       = var.deployment_preset
-    deployment_enabled  = var.deployment_enabled
-    frontend_contract   = local.frontend_contract
-    backend_contract    = local.backend_contract
-    database_contract   = local.database_contract
+    active_preset        = var.deployment_preset
+    deployment_enabled   = var.deployment_enabled
+    frontend_contract    = local.frontend_contract
+    backend_contract     = local.backend_contract
+    database_contract    = local.database_contract
     operational_contract = local.operational_contract
   }
 
   service_contracts = {
-    active_preset            = var.deployment_preset
-    deployment_enabled       = var.deployment_enabled
-    frontend_contract        = local.frontend_contract
-    backend_contract         = local.backend_contract
-    database_contract        = local.database_contract
-    operational_contract     = local.operational_contract
-    api_service_name         = local.backend_contract.service_name
-    api_service_uri          = local.backend_contract.service_url
+    active_preset             = var.deployment_preset
+    deployment_enabled        = var.deployment_enabled
+    frontend_contract         = local.frontend_contract
+    backend_contract          = local.backend_contract
+    database_contract         = local.database_contract
+    operational_contract      = local.operational_contract
+    api_service_name          = local.backend_contract.service_name
+    api_service_uri           = local.backend_contract.service_url
     api_service_account_email = local.backend_contract.service_account_email
-    api_runtime_contract     = local.backend_runtime_contract
-    runtime_secret_catalog   = module.secrets.secret_catalog
+    api_runtime_contract      = local.backend_runtime_contract
+    runtime_secret_catalog    = module.secrets.secret_catalog
     gke_secret_sync_contract = {
-      cluster_secret_store_name   = var.gke_cluster_secret_store_name
+      cluster_secret_store_name    = var.gke_cluster_secret_store_name
       workload_identity_principals = module.gke.workload_identity_principals
       backend_api_secret_mappings  = module.gke.eso_secret_mappings
     }
