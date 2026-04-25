@@ -22,7 +22,7 @@ TERRAFORM_VALIDATE_DIRS := \
 	modules/vps_stack \
 	modules/observability_support
 
-.PHONY: help bootstrap doctor sync-agent-skills sync-agent-skills-check install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check terraform-init terraform-validate terraform-plan terraform-apply local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
+.PHONY: help bootstrap doctor sync-agent-skills sync-agent-skills-check install-tools check-tools print-toolchain install-dev-tools precommit-install precommit-run lint format format-check repo-lint repo-format repo-format-check repo-policy-check terraform-init terraform-validate terraform-plan terraform-apply local-frontend-support-up local-api-support-up local-full-up local-down local-ps local-frontend-support-logs local-api-support-logs local-full-logs local-smoke-test local-db-reset
 
 help:
 	@echo "Targets:"
@@ -39,6 +39,7 @@ help:
 	@echo "  lint              Run repo lint checks"
 	@echo "  format            Apply repo formatting"
 	@echo "  format-check      Check repo formatting without writing changes"
+	@echo "  repo-policy-check Run Terraform and dashboard policy checks"
 	@echo "  terraform-init    Run terraform init -backend=false for env roots and shared modules"
 	@echo "  terraform-validate Run terraform validate for env roots and shared modules"
 	@echo "  terraform-plan ENV=<rc|prod> Run terraform plan for a single environment root"
@@ -125,13 +126,16 @@ format: repo-format
 format-check: repo-format-check
 
 repo-lint:
-	@echo "No Terraform lint checks are configured in the Phase 1 baseline."
+	python scripts/terraform-static-analysis.py
 
 repo-format:
-	@echo "No Terraform formatter is configured in the Phase 1 baseline."
+	terraform fmt -recursive
 
 repo-format-check:
-	@echo "No Terraform format check is configured in the Phase 1 baseline."
+	terraform fmt -check -recursive
+
+repo-policy-check:
+	python scripts/terraform-policy-check.py
 
 terraform-init:
 	@access_token="$${GOOGLE_OAUTH_ACCESS_TOKEN:-}"; \

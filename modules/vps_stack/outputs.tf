@@ -46,14 +46,14 @@ output "database_port" {
 output "runtime_contract" {
   description = "Runtime contract exported by the single-VPS stack."
   value = {
-    runtime_path             = "vps"
-    zone                     = var.zone
-    machine_type             = var.machine_type
-    public_ip                = try(google_compute_address.public[0].address, null)
-    frontend_url             = try("http://${google_compute_address.public[0].address}${local.frontend_suffix}", null)
-    backend_url              = try("http://${google_compute_address.public[0].address}${local.backend_suffix}", null)
-    database_host            = var.enabled ? "127.0.0.1" : null
-    database_port            = var.enabled ? var.database_port : null
+    runtime_path              = "vps"
+    zone                      = var.zone
+    machine_type              = var.machine_type
+    public_ip                 = try(google_compute_address.public[0].address, null)
+    frontend_url              = try("http://${google_compute_address.public[0].address}${local.frontend_suffix}", null)
+    backend_url               = try("http://${google_compute_address.public[0].address}${local.backend_suffix}", null)
+    database_host             = var.enabled ? "127.0.0.1" : null
+    database_port             = var.enabled ? var.database_port : null
     startup_script_configured = var.startup_script != null && trimspace(var.startup_script) != ""
   }
 }

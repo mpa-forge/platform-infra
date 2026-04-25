@@ -60,13 +60,13 @@ resource "google_compute_firewall" "ssh" {
 resource "google_compute_instance" "this" {
   count = var.enabled ? 1 : 0
 
-  project      = var.project_id
-  zone         = var.zone
-  name         = var.instance_name
-  machine_type = var.machine_type
-  tags         = [local.network_tag]
-  labels       = var.labels
-  metadata     = var.metadata
+  project                 = var.project_id
+  zone                    = var.zone
+  name                    = var.instance_name
+  machine_type            = var.machine_type
+  tags                    = [local.network_tag]
+  labels                  = var.labels
+  metadata                = var.metadata
   metadata_startup_script = var.startup_script
 
   boot_disk {

@@ -16,3 +16,7 @@ jobs:
     with:
       working-directory: "."
       terraform-version: "1.14.5"
+      format-command: "make repo-format-check"
+      lint-command: "make repo-lint"
+      validate-command: "make terraform-validate"
+      policy-command: "make repo-policy-check"

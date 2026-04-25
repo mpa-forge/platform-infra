@@ -36,8 +36,13 @@ If `mise` or `asdf` is available, the script will use it to install the pinned t
 
 - Install git hooks: `make precommit-install`
 - Run all pre-commit checks manually: `make precommit-run`
-- Run repo lint checks: `make lint`
-- Formatting is deferred for the infra repo in the Phase 1 baseline
+- Run Terraform formatting checks: `make repo-format-check`
+- Run Terraform static analysis: `make repo-lint`
+- Run Terraform validation: `make terraform-validate`
+- Run repository policy checks: `make repo-policy-check`
+
+The CI pipeline now runs the same formatting, lint, validation, and policy
+checks on pull requests.
 
 ## Terraform Layout
 
@@ -141,5 +146,9 @@ The GKE placeholder set now includes:
 
 ## Test
 
-No automated validation commands are configured yet.
-Formatting, validation, and policy checks will be introduced incrementally in later tasks.
+Run the same baseline checks locally before pushing:
+
+- `make repo-format-check`
+- `make repo-lint`
+- `make terraform-validate`
+- `make repo-policy-check`
