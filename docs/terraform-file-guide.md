@@ -470,6 +470,9 @@ This Phase 5 baseline intentionally does not yet include:
 - AI worker Cloud Run Jobs and Scheduler resources
 - edge routing for `/api/*`
 - Grafana dashboard provisioning resources
-- full CI policy/lint enforcement for Terraform
+
+The repository does already include the baseline CI formatting, validation,
+lint, and policy checks introduced in P5-T10. Later tasks may still extend the
+policy engine or add deeper plan-time enforcement.
 
 Those land in later Phase 5 tasks on top of this file and module structure.

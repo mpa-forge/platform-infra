@@ -1,13 +1,13 @@
 output "project_boundaries" {
   description = "Project boundary contract for the environment root."
   value = {
-    environment       = var.environment
-    service_project   = var.project_id
-    state_project     = var.state_project_id
-    runtime_baseline  = "cloud_run"
-    active_preset     = var.deployment_preset
+    environment        = var.environment
+    service_project    = var.project_id
+    state_project      = var.state_project_id
+    runtime_baseline   = "cloud_run"
+    active_preset      = var.deployment_preset
     deployment_enabled = var.deployment_enabled
-    gke_enabled       = local.module_activation.gke
+    gke_enabled        = local.module_activation.gke
   }
 }
 
