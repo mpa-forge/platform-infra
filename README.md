@@ -94,6 +94,7 @@ Repo-local Terraform entrypoints:
 - `make terraform-plan ENV=prod`
 - `make terraform-apply ENV=rc`
 - `make terraform-apply ENV=prod`
+- GitHub Actions manual RC apply: `terraform-apply-rc`
 
 The environment roots use remote state in GCS. Real plan/apply workflows should
 authenticate with ADC or a CI service account that has access to the matching
@@ -115,6 +116,7 @@ See `docs/deployment-presets.md` for the preset catalog and activation model.
 See `docs/module-cost-presets.md` for mix-and-match per-module cost tuning.
 See `docs/terraform-remote-state.md` for the state project, bucket, IAM, and
 operator workflow.
+See `docs/runbooks/rc-terraform-apply.md` for the CI-managed RC apply contract.
 See `docs/cloud-run-api-runtime.md` for the Phase 5 Cloud Run API runtime
 contract.
 See `docs/artifact-registry.md` for the regional GAR repository, cleanup, image
