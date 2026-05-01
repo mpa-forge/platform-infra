@@ -55,3 +55,24 @@ make terraform-apply ENV=prod
 
 The plan and apply targets use `-lock-timeout=5m` so concurrent runs wait for
 the shared GCS state lock instead of failing immediately.
+
+## GitHub Actions RC Apply
+
+`platform-infra` also exposes a manual GitHub Actions workflow,
+`terraform-apply-rc`, that applies `environments/rc` only.
+
+The workflow:
+
+- authenticates through GitHub OIDC and Workload Identity Federation
+- uses the same remote backend as local operator runs
+- preserves the `-lock-timeout=5m` convention
+- publishes plan and apply artifacts for review
+- gates the final apply step behind the `rc-apply` GitHub Environment
+
+Required repository variables:
+
+- `RC_GCP_WORKLOAD_IDENTITY_PROVIDER`
+- `RC_GCP_CI_SERVICE_ACCOUNT`
+
+See [docs/runbooks/rc-terraform-apply.md](/C:/Users/Miquel/dev/platform-infra/docs/runbooks/rc-terraform-apply.md)
+for the full operator contract.

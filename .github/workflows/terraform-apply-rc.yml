@@ -1,0 +1,20 @@
+name: terraform-apply-rc
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  apply-rc:
+    uses: mpa-forge/.github/.github/workflows/reusable-terraform-apply-rc.yml@main
+    with:
+      working-directory: "."
+      terraform-version: "1.14.5"
+      root-directory: "environments/rc"
+      lock-timeout: "5m"
+      github-environment: "rc-apply"
+      gcp-workload-identity-provider: ${{ vars.RC_GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      gcp-service-account: ${{ vars.RC_GCP_CI_SERVICE_ACCOUNT }}
